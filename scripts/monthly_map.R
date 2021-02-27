@@ -5,53 +5,61 @@
 ##
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-sapply(c('rgdal', 'raster', 'data.table', 'magrittr', 'sp', 'rgeos', 'raster', 'foreach',
-         'ncdf4', 'gdalUtilities',"rnaturalearthdata","rnaturalearth", 'windR', 'geosphere', 'ggplot2'),
+sapply(c( 'raster','stringr', 'data.table', 'magrittr', 'sf', "rnaturalearthdata","rnaturalearth", 'windR', 'geosphere', 'ggplot2'),
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 cosd <-function(x) cos(x*pi/180) #degrees 
-sind <-function(x) sin(x*pi/180) # radians
+sind <-function(x) sin(x*pi/180) 
+mean_angle <-function(x) #calculates mean angle by decomposing it in u and v components
+{
+  u <- cosd(x)
+  v <- sind(x)
+  mean_u <- mean(u, na.rm = T)
+  mean_v <- mean(v, na.rm = T)
+  atan2(mean_v,mean_u)*180/pi
+}
 
 
 ###GET DATA ----
+  month = "2016-11" #month studied in this example
   birdRDS = list.files(path="Kittiwake_data", pattern = "Alkefjellet_nov2016")
   bird_data = readRDS(paste0("Kittiwake_data/", birdRDS)) %>% as.data.table
-  bird_data_ = bird_data["2016-11" %in% bird_data$timestamp]
+  bird_data_ = bird_data[as.logical(str_count(bird_data$timestamp, pattern = month))] #data used
   
   windRDS = list.files(path="ASCAT", pattern= '.RDS')
   wind_data = readRDS(paste0("ASCAT/", windRDS)) %>% as.data.table
-  wind_data_ = wind_data[wind_data$datetime_=="2016-11-16 CET" ] #dataset used in this example (11-2016)
+  wind_data_ = wind_data[as.logical(str_count(wind_data$datetime_, pattern = month))] #data used
 
 #GET SPEED AND DIRECTION ----
-  setnames(bird_data, c("lon","lat"),c("x", "y"))
-  bird_data[, timestamp2 := data.table::shift(timestamp, type = 'lead'), by = ring]
-  bird_data[, x2 := data.table::shift(x, type = 'lead'), by = ring]
-  bird_data[, y2 := data.table::shift(y, type = 'lead'), by = ring]
-  bird_data[, dt := as.numeric(difftime(timestamp2, timestamp, units = 'sec'))]
+  setnames(bird_data_, c("lon","lat"),c("x", "y"))
+  bird_data_[, timestamp2 := data.table::shift(timestamp, type = 'lead'), by = ring]
+  bird_data_[, x2 := data.table::shift(x, type = 'lead'), by = ring]
+  bird_data_[, y2 := data.table::shift(y, type = 'lead'), by = ring]
+  bird_data_[, dt := as.numeric(difftime(timestamp2, timestamp, units = 'sec'))]
   
   gspeed = c()
   gdir=c()
   wdir=c()
-  for (i in (1:nrow(bird_data)))
+  for (i in (1:nrow(bird_data_)))
   {
-    gspeed = append(gspeed,distGeo(c(bird_data$x[i], bird_data$y[i]),c(bird_data$x2[i], bird_data$y2[i]))/bird_data$dt[i])
-    gdir = append(gdir, geosphere::bearing(c(bird_data$x[i], bird_data$y[i]),c(bird_data$x2[i], bird_data$y2[i])))
+    gspeed = append(gspeed,distGeo(c(bird_data_$x[i], bird_data_$y[i]),c(bird_data_$x2[i], bird_data_$y2[i]))/bird_data_$dt[i])
+    gdir = append(gdir, geosphere::bearing(c(bird_data_$x[i], bird_data_$y[i]),c(bird_data_$x2[i], bird_data_$y2[i])))
     
   }
   for (i in (1:nrow(wind_data_)))
   {
     wdir = append(wdir, windR::bearing(0,0,wind_data_$u[i],wind_data_$v[i]))
   }
-  bird_data[, gspeed := gspeed]
-  bird_data[, gdir := gdir]
+  bird_data_[, gspeed := gspeed]
+  bird_data_[, gdir := gdir]
   wind_data_[,wspeed := sqrt(wind_data_$u^2+wind_data_$v^2)]
   wind_data_[,wdir := wdir*180/pi]
 
 ###CONVERT TO RASTER ----
-  r <- raster(xmn=(min(bird_data$x)-1), ymn=(min(bird_data$y)-1), xmx=(max(bird_data$x)+1), ymx=(max(bird_data$y)+1), res=2)
-  r.gdir <- rasterize(bird_data[,c("x","y")], r, field = bird_data$gdir, fun = mean, na.rm = T)
-  r.gspeed <- rasterize(bird_data[,c("x","y")], r, field = bird_data$gspeed, fun = mean, na.rm = T)
-  r.n <- rasterize(bird_data[,c("x","y")], r, field = bird_data$x2, fun = 'count', na.rm = T)
-  r.wdir <- rasterize(wind_data_[,c("x","y")],r, field = wind_data_$wdir,fun = mean)
+  r <- raster(xmn=(min(bird_data_$x)-1), ymn=(min(bird_data_$y)-1), xmx=(max(bird_data_$x)+1), ymx=(max(bird_data_$y)+1), res=2)
+  r.gdir <- rasterize(bird_data_[,c("x","y")], r, field = bird_data_$gdir, fun = function(x, na.rm=T) mean_angle(x))
+  r.gspeed <- rasterize(bird_data_[,c("x","y")], r, field = bird_data_$gspeed, fun = mean)
+  r.n <- rasterize(bird_data_[,c("x","y")], r, field = bird_data_$x2, fun = 'count')
+  r.wdir <- rasterize(wind_data_[,c("x","y")],r, field = wind_data_$wdir, fun = function(x, na.rm=T) mean_angle(x))
   r.wspeed <- rasterize(wind_data_[,c("x","y")],r, field = wind_data_$wspeed,fun = mean)
 
 ###BACK TO DATA FRAME (pxdata = data for each pixel) ----
@@ -66,20 +74,20 @@ sind <-function(x) sin(x*pi/180) # radians
 ###DISPLAY###
 world <- ne_countries(scale = "medium", returnclass = "sf")
 a=4 #Arrow size
-plottraj =  ggplot(data = bird_data) + 
+plottraj =  ggplot(data = bird_data_) + 
   geom_segment(aes(x = x, y = y, xend = x2, yend = y2, color=migr10),arrow = arrow(length = unit(.1, "cm"))) +
   geom_point(aes(x,y),size =.7) +
   geom_sf(data=world ,fill = "black", color = "black") + 
-  coord_sf(xlim = c(min(bird_data$x)-1, max(bird_data$x)+1), ylim = c(min(bird_data$y)-1, max(bird_data$y)+1), expand = FALSE)
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
 
 plotbird =  ggplot(data = pxdata[not(is.na(pxdata$n))]) + 
   geom_segment(aes(x = x, y = y, xend = x+gspeed/a*sind(gdir), yend = y+gspeed/a*cosd(gdir), color=n),arrow = arrow(length = unit(.1, "cm"))) +
   scale_color_gradient("n", low = "grey", high = "red") +
   geom_sf(data=world ,fill = "black", color = "black") + 
-  coord_sf(xlim = c(min(bird_data$x)-1, max(bird_data$x)+1), ylim = c(min(bird_data$y)-1, max(bird_data$y)+1), expand = FALSE)
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
 plotwind = ggplot(data = pxdata) +
   geom_segment(aes(x = x, y = y, xend = x+wspeed/a*sind(wdir), yend = y+wspeed/a*cosd(wdir)),arrow = arrow(length = unit(.1, "cm"))) +
   geom_sf(data=world ,fill = "black", color = "black") + 
-  coord_sf(xlim = c(min(bird_data$x)-1, max(bird_data$x)+1), ylim = c(min(bird_data$y)-1, max(bird_data$y)+1), expand = FALSE)
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
 
 
