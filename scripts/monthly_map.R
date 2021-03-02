@@ -18,6 +18,19 @@ mean_angle <-function(x) #calculates mean angle by decomposing it in u and v com
   atan2(mean_v,mean_u)*180/pi
 }
 
+adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
+{
+  u = wspeed * sind(wdir)
+  v= wspeed * cosd(wdir)
+  
+  x_g = gspeed * sind(gdir)
+  y_g = gspeed * cosd(gdir)
+  
+  x_a = x_g-u
+  y_a = y_g-v
+  
+  atan2(x_a,y_a)*180/pi
+}
 
 ###GET DATA ----
   month = "2016-11" #month studied in this example
