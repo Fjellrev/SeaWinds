@@ -21,12 +21,13 @@ mean_angle <-function(x) #calculates mean angle by decomposing it in u and v com
 
 ###GET DATA ----
   month = "2016-11" #month studied in this example
-  birdRDS = list.files(path="Kittiwake_data", pattern = "Alkefjellet_nov2016")
-  bird_data = readRDS(paste0("Kittiwake_data/", birdRDS)) %>% as.data.table
-  bird_data_ = bird_data[as.logical(str_count(bird_data$timestamp, pattern = month))] #data used
+  migr = c(0,1)     # type of segment studied (0 = stationnary, 1 = migratory)
+  birdRDS = list.files(path="data/Kittiwake_data", pattern = "Alkefjellet_nov2016")
+  bird_data = readRDS(paste0("data/Kittiwake_data/", birdRDS)) %>% as.data.table
+  bird_data_ = bird_data[as.logical(str_count(bird_data$timestamp, pattern = month))&bird_data$migr10 %in% migr] #data used
   
-  windRDS = list.files(path="ASCAT", pattern= '.RDS')
-  wind_data = readRDS(paste0("ASCAT/", windRDS)) %>% as.data.table
+  windRDS = list.files(path="data/ASCAT", pattern= 'ASCAT_monthly_201309_201912_wind.RDS')
+  wind_data = readRDS(paste0("data/ASCAT/", windRDS)) %>% as.data.table
   wind_data_ = wind_data[as.logical(str_count(wind_data$datetime_, pattern = month))] #data used
 
 #GET SPEED AND DIRECTION ----
@@ -55,7 +56,7 @@ mean_angle <-function(x) #calculates mean angle by decomposing it in u and v com
   wind_data_[,wdir := wdir*180/pi]
 
 ###CONVERT TO RASTER ----
-  r <- raster(xmn=(min(bird_data_$x)-1), ymn=(min(bird_data_$y)-1), xmx=(max(bird_data_$x)+1), ymx=(max(bird_data_$y)+1), res=2)
+  r <- raster(xmn=(min(bird_data_$x)-1), ymn=(min(bird_data_$y)-1), xmx=(max(bird_data_$x)+1), ymx=(max(bird_data_$y)+1), res=1)
   r.gdir <- rasterize(bird_data_[,c("x","y")], r, field = bird_data_$gdir, fun = function(x, na.rm=T) mean_angle(x))
   r.gspeed <- rasterize(bird_data_[,c("x","y")], r, field = bird_data_$gspeed, fun = mean)
   r.n <- rasterize(bird_data_[,c("x","y")], r, field = bird_data_$x2, fun = 'count')
@@ -70,7 +71,11 @@ mean_angle <-function(x) #calculates mean angle by decomposing it in u and v com
   setnames(pxdata, c("layer.x.x","layer.y.x","layer", "layer.x.y", "layer.y.y"), c("gdir","gspeed","n","wdir","wspeed"))
   pxdata <- pxdata %>% as.data.table
 
-
+###DATA ANALYSIS ----
+  pxdata[,aspeed := sqrt(pxdata$gspeed^2-pxdata$wspeed^2 -2 * pxdata$gspeed * pxdata$wspeed * cosd(pxdata$wdir-pxdata$gdir))]
+  pxdata[, ws := cosd(pxdata$wdir-pxdata$gdir)]
+  pxdata[, cw := sind(pxdata$wdir-pxdata$gdir)] # CW > 0 towards the right
+  
 ###DISPLAY###
 world <- ne_countries(scale = "medium", returnclass = "sf")
 a=4 #Arrow size
@@ -81,8 +86,8 @@ plottraj =  ggplot(data = bird_data_) +
   coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
 
 plotbird =  ggplot(data = pxdata[not(is.na(pxdata$n))]) + 
-  geom_segment(aes(x = x, y = y, xend = x+gspeed/a*sind(gdir), yend = y+gspeed/a*cosd(gdir), color=n),arrow = arrow(length = unit(.1, "cm"))) +
-  scale_color_gradient("n", low = "grey", high = "red") +
+  geom_segment(aes(x = x, y = y, xend = x+gspeed/a*sind(gdir), yend = y+gspeed/a*cosd(gdir), color=ws),arrow = arrow(length = unit(.1, "cm"))) +
+  scale_color_gradient("wind support", low = "red", high = "green") +
   geom_sf(data=world ,fill = "black", color = "black") + 
   coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
 plotwind = ggplot(data = pxdata) +
