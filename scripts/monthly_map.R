@@ -5,7 +5,7 @@
 ##
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-sapply(c( 'raster','stringr', 'data.table', 'magrittr', 'sf', "rnaturalearthdata","rnaturalearth", 'windR', 'geosphere', 'ggplot2'),
+sapply(c( 'raster','stringr', 'data.table', 'magrittr', 'sf', "rnaturalearthdata","rnaturalearth", 'windR', 'geosphere', 'ggplot2', 'circular'),
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 cosd <-function(x) cos(x*pi/180) #degrees 
 sind <-function(x) sin(x*pi/180) 
@@ -34,7 +34,7 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
 
 ###GET DATA ----
   month = "2016-11" #month studied in this example
-  migr = c(0,1)     # type of segment studied (0 = stationnary, 1 = migratory)
+  migr = c(1)     # type of segment studied (0 = stationnary, 1 = migratory)
   birdRDS = list.files(path="data/Kittiwake_data", pattern = "Alkefjellet_nov2016")
   bird_data = readRDS(paste0("data/Kittiwake_data/", birdRDS)) %>% as.data.table
   bird_data_ = bird_data[as.logical(str_count(bird_data$timestamp, pattern = month))&bird_data$migr10 %in% migr] #data used
@@ -85,11 +85,27 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
   pxdata <- pxdata %>% as.data.table
 
 ###DATA ANALYSIS ----
-  pxdata[,aspeed := sqrt(abs(pxdata$gspeed^2-pxdata$wspeed^2 -2 * pxdata$gspeed * pxdata$wspeed * cosd(pxdata$wdir-pxdata$gdir)))]
   pxdata[, adir := adir(pxdata$gspeed, pxdata$gdir, pxdata$wspeed, pxdata$wdir)]
-  pxdata[, ws := cosd(pxdata$wdir-pxdata$gdir)]
-  pxdata[, cw := sind(pxdata$wdir-pxdata$gdir)] # CW > 0 towards the right
+  pxdata[, ws := pxdata$wspeed*cosd(pxdata$wdir-pxdata$gdir)]
+  pxdata[, cw := pxdata$wspeed*sind(pxdata$wdir-pxdata$gdir)] # CW > 0 towards the right
+  pxdata[,aspeed := sqrt((pxdata$gspeed-pxdata$ws)^2+pxdata$cw^2)]
   saveRDS(pxdata, file = "outputs/monthly_pixel_data.rds")
+
+  ggplot(data = pxdata)+ #histogram of wind support 
+    geom_histogram(aes(x=ws))+
+    xlab("Wind support")
+  
+  ggplot(data = pxdata)+ #Air speed as a function of wind support
+    geom_point(aes(x=ws, y = aspeed, size = gspeed))+
+    geom_smooth(aes(x=ws, y = aspeed), method = "lm")+
+    xlab("Wind support")+ylab("air speed")
+  
+  ggplot(data = pxdata)+ #Ground speed as a function of wind support
+    geom_point(aes(x=ws, y = gspeed, size = gspeed))+
+    geom_smooth(aes(x=ws, y = gspeed), method = "lm")+
+    xlab("Wind support")+ylab("ground speed")
+  
+  
 ###DISPLAY###
 world <- ne_countries(scale = "medium", returnclass = "sf")
 a=4 #Arrow size
