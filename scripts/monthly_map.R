@@ -34,7 +34,7 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
 
 ###GET DATA ----
   month = "2016-11" #month studied in this example
-  migr = c(1)     # type of segment studied (0 = stationnary, 1 = migratory)
+  migr = c(0,1)     # type of segment studied (0 = stationnary, 1 = migratory)
   birdRDS = list.files(path="data/Kittiwake_data", pattern = "Alkefjellet_nov2016")
   bird_data = readRDS(paste0("data/Kittiwake_data/", birdRDS)) %>% as.data.table
   bird_data_ = bird_data[as.logical(str_count(bird_data$timestamp, pattern = month))&bird_data$migr10 %in% migr] #data used
@@ -101,7 +101,7 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
     xlab("Wind support")+ylab("air speed")
   
   ggplot(data = pxdata)+ #Ground speed as a function of wind support
-    geom_point(aes(x=ws, y = gspeed, size = gspeed))+
+    geom_point(aes(x=ws, y = gspeed))+
     geom_smooth(aes(x=ws, y = gspeed), method = "lm")+
     xlab("Wind support")+ylab("ground speed")
   
