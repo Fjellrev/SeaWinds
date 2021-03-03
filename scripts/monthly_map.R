@@ -69,7 +69,7 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
   wind_data_[,wdir := wdir*180/pi]
 
 ###CONVERT TO RASTER ----
-  r <- raster(xmn=(min(bird_data_$x)-1), ymn=(min(bird_data_$y)-1), xmx=(max(bird_data_$x)+1), ymx=(max(bird_data_$y)+1), res=1)
+  r <- raster(xmn=(min(bird_data_$x)-1), ymn=(min(bird_data_$y)-1), xmx=(max(bird_data_$x)+1), ymx=(max(bird_data_$y)+1), res=2)
   r.gdir <- rasterize(bird_data_[,c("x","y")], r, field = bird_data_$gdir, fun = function(x, na.rm=T) mean_angle(x))
   r.gspeed <- rasterize(bird_data_[,c("x","y")], r, field = bird_data_$gspeed, fun = mean)
   r.n <- rasterize(bird_data_[,c("x","y")], r, field = bird_data_$x2, fun = 'count')
@@ -85,10 +85,11 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
   pxdata <- pxdata %>% as.data.table
 
 ###DATA ANALYSIS ----
-  pxdata[,aspeed := sqrt(pxdata$gspeed^2-pxdata$wspeed^2 -2 * pxdata$gspeed * pxdata$wspeed * cosd(pxdata$wdir-pxdata$gdir))]
+  pxdata[,aspeed := sqrt(abs(pxdata$gspeed^2-pxdata$wspeed^2 -2 * pxdata$gspeed * pxdata$wspeed * cosd(pxdata$wdir-pxdata$gdir)))]
+  pxdata[, adir := adir(pxdata$gspeed, pxdata$gdir, pxdata$wspeed, pxdata$wdir)]
   pxdata[, ws := cosd(pxdata$wdir-pxdata$gdir)]
   pxdata[, cw := sind(pxdata$wdir-pxdata$gdir)] # CW > 0 towards the right
-  
+  saveRDS(pxdata, file = "outputs/monthly_pixel_data.rds")
 ###DISPLAY###
 world <- ne_countries(scale = "medium", returnclass = "sf")
 a=4 #Arrow size
