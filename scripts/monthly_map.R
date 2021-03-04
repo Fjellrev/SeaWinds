@@ -67,7 +67,18 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
   bird_data_[, gdir := gdir]
   wind_data_[,wspeed := sqrt(wind_data_$u^2+wind_data_$v^2)]
   wind_data_[,wdir := wdir*180/pi]
-
+  
+###GET MIGRATORY SEGMENTS ----
+  #bird_data_[, migrx := data.table::shift(x, n = 3L, type = 'lead'), by = ring]
+  #bird_data_[, migry := data.table::shift(y, n = 3L, type = 'lead'), by = ring]
+  
+  #dist_migr=c()
+  #for (i in (1:nrow(bird_data_)))
+  #{
+    #dist_migr = append(dist_migr,distGeo(c(bird_data_$x[i], bird_data_$y[i]),c(bird_data_$migrx[i], bird_data_$migry[i])))
+  #}
+  #bird_data_[, migr10 := as.numeric(dist_migr>4e+05)]
+  
 ###CONVERT TO RASTER ----
   r <- raster(xmn=(min(bird_data_$x)-1), ymn=(min(bird_data_$y)-1), xmx=(max(bird_data_$x)+1), ymx=(max(bird_data_$y)+1), res=2)
   r.gdir <- rasterize(bird_data_[,c("x","y")], r, field = bird_data_$gdir, fun = function(x, na.rm=T) mean_angle(x))
