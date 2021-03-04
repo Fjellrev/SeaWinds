@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r, echo = FALSE, results = "hide"}
-sapply(c( 'raster','stringr', 'data.table', 'magrittr', 'sf', "rnaturalearthdata","rnaturalearth", 'windR', 'geosphere', 'ggplot2'),
+sapply(c( 'raster','stringr', 'data.table', 'magrittr', 'sf', "rnaturalearthdata","rnaturalearth", 'windR', 'geosphere', 'ggplot2','ncdf4'),
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 
 pxdata = readRDS("outputs/monthly_pixel_data.rds")
@@ -47,6 +47,31 @@ Little is known concerning their movements outside the breeding season. Most kit
 ***Several Datasets can be used***
 
 * Direct measurements: **ASCAT** (scatterometry). Seems like ASCAT is the only direct measure available covering the period of interest. 
+There could be an issue with the coverage of the daily data (due to the passage of the satellite above the Ocean). 
+
+To test this, I downloaded daily data of 2016-11. I counted the number of NA each day. As no data could be obtained above lands, many NA are only caused by the lands. I thus defined the size of the studied area as the number of pixels on the whole area, minus the minimal number of NA encountered. I quantified the relative difference between the daily number of NA and the size of the studied area. See the code and outputs below.
+
+```{r, echo = TRUE}
+netcdf_ = list.files(path="data/ASCAT", pattern = "ASCAT_daily")
+
+u = brick(paste0("data/ASCAT/", netcdf_), varname = "x_wind")
+v = brick(paste0("data/ASCAT/", netcdf_), varname = "y_wind")
+
+daily_na = c()
+for (i in (1:nlayers(u)))
+{
+  daily_na = append(daily_na, length(which(is.na(u[[i]][]))))
+}
+
+study_area = length(u[[1]][])-min(daily_na) #size of the largest zone that can be studied in the sample
+daily_na = (daily_na - min(daily_na))/study_area #proportion of the study area that is lost
+print(daily_na)
+
+plot(u[[which(daily_na==min(daily_na))]], main="max coverage")
+plot(u[[which(daily_na==max(daily_na))]], main="min coverage")
+```
+
+The difference in coverage between days seems negligible (<5% of the studied area). Overall, the coverage of the data is sufficient to conduct daily analysis. 
 
 **ASCAT: 1 day; 0.25°; 2013-present; surface **
 
@@ -86,6 +111,7 @@ Do black legged kittiwakes take advantage of winds (and currents?) when they mig
 3. If we have enough time, an aspect I’m very interested in is the interannual (and intercolonial) variability of wind support: for instance, no annual variability in WS as well as a variability in wind conditions and migratory tracks could be indicative of behavioral adjustment to wind conditions (be it a shift in the migratory route or the destination).
 
 **NB**: I’ll focus on the whole track, but it could be interesting/necessary to compare the migratory segments and the stationary ones. I can access the output of Françoise’s Lavielle segmentation to distinguish between the two types of movements. Maybe other types of segmentation could be necessary in our particular case (*e.g* residence time (CF Dell'Arccia & al.))
+
 # 4. Monthly analysis 
 
 I plotted on maps of the North Atlantic Ocean the mean wind direction and speed, and the mean ground direction and speed of the birds (see below). 
@@ -99,12 +125,12 @@ ggplot(data = pxdata[not(is.na(pxdata$n))]) +
   scale_color_gradient("wind support", low = "red", high = "green") +
   geom_sf(data=world ,fill = "black", color = "black") + 
   coord_sf(xlim = c(min(pxdata$x)-1, max(pxdata$x)+1), ylim = c(min(pxdata$y)-1, max(pxdata$y)+1), expand = FALSE)+
-  ggtitle("Map of the Atlantic Ocean showing the wind vectors")
+  ggtitle("Map of the Atlantic ocean showing the birds’ movement.\n The wind support encountered by the birds is represented \n with a gradient color.")
 ggplot(data = pxdata) +
   geom_segment(aes(x = x, y = y, xend = x+wspeed/a*sind(wdir), yend = y+wspeed/a*cosd(wdir)),arrow = arrow(length = unit(.1, "cm"))) +
   geom_sf(data=world ,fill = "black", color = "black") + 
   coord_sf(xlim = c(min(pxdata$x)-1, max(pxdata$x)+1), ylim = c(min(pxdata$y)-1, max(pxdata$y)+1), expand = FALSE)+
-  ggtitle("Map of the Atlantic ocean showing the birds’ movement.\n The wind support encountered by the birds is represented with a gradient color.")
+  ggtitle("Map of the Atlantic Ocean showing the wind vectors")
 
 
 ```
@@ -114,7 +140,7 @@ ggplot(data = pxdata) +
 
 1.	Ground direction on a pixel is correlated with wind direction on the same pixel.
 
-I don't know how to test this correlation. I tried with a circular correlation coefficient and found $r^2 \simeq -0.23$ with a p-value$ < 0.001$. I don't know how relevant this coefficient is. I also found that a coefficient called $\rho_v^2$ would be relevant (many references using this coefficients) but i don't know how to compute it with R. 
+I don't know how to test this correlation. I tried with a circular correlation coefficient and found $r^2 \simeq -0.23$ with a p-value $< 0.001$. I don't know how relevant this coefficient is. I also found that a coefficient called $\rho_v^2$ would be relevant (many references using this coefficients) but I haven't yet found how to compute it with R. 
 
 2.	Overall, WS > 0. On migratory segments, this effect shall be stronger.
 
@@ -125,6 +151,8 @@ I don't know how to test this correlation. I tried with a circular correlation c
   print(paste0("mean wind support :", mean(pxdata$ws, na.rm = T)))
 ```
 
+This result is a bit surprising. It shows that WS is distributed around 0, with a mean Wind Support not significantly different from 0, suggested that bird do not adjust their journey to take advantage of winds. I tried to focus only on the migratory segments (using the outputs of Amélineau in prep. 2020 or by defining new migratory segments using for each location the distance travelled the following days. This distance is supposed to be greater on the migratory segments, when the trajectory is rather straight). Using only theses segments, the result is the same.
+This may come from the lack of tracks studied or the month. Running this simulation with more colonies and more months is necessary to push the study further. It may also be a consequence of the temporal resolution. Linking bird movements with the wind encountered on a specific day could enable us to see more clearly the relation between wind direction and the bird's heading.
 
 3.	If the bird maximizes travel speed: Gspeed increases with WS and airspeed is constant. If the birds minimize the energy expenditure: Gspeed is constant but airspeed decreases with WS. We can imagine that birds on migratory segments maximize travel speed while they minimize the energy expenditure on stationary segments.
 
@@ -140,7 +168,9 @@ ggplot(data = pxdata)+ #Air speed as a function of wind support
     xlab("Wind support")+ylab("ground speed")
   
 ```
+Together these graphs strongly suggest that birds seek to minimize their energy expenditure: their ground speed is constant whatever the wind support encountered but their head-speed (directly related to their energy expenditure) decreases with increasing wind support. The same trend was found focusing on the migratory segments only.
 
+Nevertheless, when we look at the definition of airspeed (see the section *vectors used* above) the fact that it decreases with wind support is obvious ($\vec{a_s} = \vec{g_s}-\vec{w_s}=\vec{g_s}-\vec{WS} - \vec{CW}$). I don't know if the graph still means something. In a way, I think that the important fact is that ground speed doesn't increase with wind support, the fact that air speed decreases is a consequence of that.
 
 4.	WS is higher on the migratory path compared with the straight line.  
 
