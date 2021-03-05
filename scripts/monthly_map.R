@@ -7,8 +7,10 @@
 
 sapply(c( 'raster','stringr', 'data.table', 'magrittr', 'sf', "rnaturalearthdata","rnaturalearth", 'windR', 'geosphere', 'ggplot2', 'circular'),
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
+
 cosd <-function(x) cos(x*pi/180) #degrees 
 sind <-function(x) sin(x*pi/180) 
+
 mean_angle <-function(x) #calculates mean angle by decomposing it in u and v components
 {
   u <- cosd(x)
@@ -121,18 +123,18 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
 world <- ne_countries(scale = "medium", returnclass = "sf")
 a=4 #Arrow size
 plottraj =  ggplot(data = bird_data_) + 
-  geom_segment(aes(x = x, y = y, xend = x2, yend = y2, color=migr10),arrow = arrow(length = unit(.1, "cm"))) +
+  geom_segment(size = 1, aes(x = x, y = y, xend = x2, yend = y2, color=migr10),arrow = arrow(length = unit(.15, "cm"))) +
   geom_point(aes(x,y),size =.7) +
   geom_sf(data=world ,fill = "black", color = "black") + 
   coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
 
 plotbird =  ggplot(data = pxdata[not(is.na(pxdata$n))]) + 
-  geom_segment(aes(x = x, y = y, xend = x+gspeed/a*sind(gdir), yend = y+gspeed/a*cosd(gdir), color=ws),arrow = arrow(length = unit(.1, "cm"))) +
+  geom_segment(size = 1, aes(x = x, y = y, xend = x+gspeed/a*sind(gdir), yend = y+gspeed/a*cosd(gdir), color=ws),arrow = arrow(length = unit(.15, "cm"))) +
   scale_color_gradient("wind support", low = "red", high = "green") +
   geom_sf(data=world ,fill = "black", color = "black") + 
   coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
 plotwind = ggplot(data = pxdata) +
-  geom_segment(aes(x = x, y = y, xend = x+wspeed/a*sind(wdir), yend = y+wspeed/a*cosd(wdir)),arrow = arrow(length = unit(.1, "cm"))) +
+  geom_segment(size = 1, aes(x = x, y = y, xend = x+wspeed/a*sind(wdir), yend = y+wspeed/a*cosd(wdir)),arrow = arrow(length = unit(.15, "cm"))) +
   geom_sf(data=world ,fill = "black", color = "black") + 
   coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
 
