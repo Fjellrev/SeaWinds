@@ -86,14 +86,32 @@ bird_data_[, wspeed     := sqrt(u_wind^2 + v_wind^2), by = 1:nrow(bird_data_)]
 bird_data_[, ws := wspeed*cosd(wdir - gdir)]
 
 
-ggplot(data=bird_data_[bird_data_$gspeed>4])+
-  geom_histogram(aes(x=ws))
+ws_track = c() #mean wind support on the individual tracks
+for (i in unique(bird_data_$ring))
+{
+  ws_track = append(ws_track, sum(bird_data_$ws[bird_data_$ring==i]*bird_data_$gspeed[bird_data_$ring==i], na.rm = T))
+}
+track <- data.table(ring = unique(bird_data_$ring), ws = ws_track)
+
+ggplot(data=bird_data_)+
+  geom_histogram(aes(x=ws, color = migr10==1), fill = 'white')+
+  geom_vline(data = bird_data_[migr10==1],aes(xintercept=mean(ws, na.rm = T)),
+             linetype="dashed", color = 'blue')+
+  geom_vline(data = bird_data_[migr10==0],aes(xintercept=mean(ws, na.rm = T)),
+             linetype="dashed", color = 'red')
+
+ggplot(data=track)+
+  geom_histogram(aes(x=ws))+
+  geom_vline(aes(xintercept=mean(ws, na.rm = T)),
+             linetype="dashed", color = 'blue')
+
 
 ###DISPLAY###
 world <- ne_countries(scale = "medium", returnclass = "sf")
 a=4 #Arrow size
-plottraj =  ggplot(data = bird_data_[bird_data_$gspeed>4]) + 
+ggplot(data = bird_data_) + 
   geom_segment(aes(x = x, y = y, xend = x2, yend = y2, color=ws),arrow = arrow(length = unit(.1, "cm"))) +
   scale_color_gradient("wind support", low = "red", high = "green") +
   geom_sf(data=world ,fill = "black", color = "black") + 
   coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
+
