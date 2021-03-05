@@ -24,31 +24,35 @@ names(u) <- dd$rastNam
 names(v) <- dd$rastNam
 
 o <- foreach(i = 1:nlayers(u) ) %do% {
-  if(i!=9){ #No data on layer 9, i need to find a condition more general to specify if no data
-  # u wind component
-  xu <- as(u[[i]] , "SpatialPixelsDataFrame")
-  xu <- xu %>% as.data.frame %>% data.table
-  xu[, datetime_ := dd$datetime_[i]]
-  setnames(xu, c('u', 'x', 'y', 'datetime_'))
-  setcolorder(xu, c('x', 'y', 'datetime_', 'u'))
-  xu[, xy        := paste0(x, '_',y)]
   
-  # v wind component
-  xv <- as(v[[i]] , "SpatialPixelsDataFrame")
-  xv <- xv %>% as.data.frame %>% data.table
-  xv[, datetime_ := dd$datetime_[i]]
-  setnames(      xv, c('v', 'x', 'y', 'datetime_'))
-  setcolorder(   xv, c('x', 'y', 'datetime_', 'v'))
-  xv[, xy        := paste0(x, '_',y)]
-  
-  # merge u and v
-  xuv <- merge(xu, xv[, c('xy', 'v', 'datetime_'), with = FALSE], by = c('xy', 'datetime_') )
-  
-  # get rid of useless columns
-  xuv[, ':=' (xy = NULL)]
-  cat(i)
-  xuv
-}}
+  if(length(which(is.na(u[[i]][]))) != length(u[[i]][])){ # check if no data
+    
+    # u wind component
+    xu <- as(u[[i]] , "SpatialPixelsDataFrame")
+    xu <- xu %>% as.data.frame %>% data.table
+    xu[, datetime_ := dd$datetime_[i]]
+    setnames(xu, c('u', 'x', 'y', 'datetime_'))
+    setcolorder(xu, c('x', 'y', 'datetime_', 'u'))
+    xu[, xy        := paste0(x, '_',y)]
+    
+    # v wind component
+    xv <- as(v[[i]] , "SpatialPixelsDataFrame")
+    xv <- xv %>% as.data.frame %>% data.table
+    xv[, datetime_ := dd$datetime_[i]]
+    setnames(      xv, c('v', 'x', 'y', 'datetime_'))
+    setcolorder(   xv, c('x', 'y', 'datetime_', 'v'))
+    xv[, xy        := paste0(x, '_',y)]
+    
+    # merge u and v
+    xuv <- merge(xu, xv[, c('xy', 'v', 'datetime_'), with = FALSE], by = c('xy', 'datetime_') )
+    
+    # get rid of useless columns
+    xuv[, ':=' (xy = NULL)]
+    cat(i)
+    xuv
+  }
+}
+
 w <- rbindlist(o)
 
 saveRDS(w, paste0(dirWind, 'ASCAT_monthly_201309_201912_wind.RDS'), compress='xz')
