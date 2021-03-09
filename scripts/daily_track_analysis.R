@@ -7,7 +7,7 @@
 sapply(c( 'raster','stringr', 'data.table', 'magrittr', 'sf', "rnaturalearthdata","rnaturalearth", 'windR', 'geosphere', 'ggplot2', 'circular'),
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 
-proj.latlon <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+proj.latlon <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" #classic longlat projection to use the windR function
 
 cosd <-function(x) cos(x*pi/180) #degrees 
 sind <-function(x) sin(x*pi/180) 
@@ -39,12 +39,13 @@ month = "2016-11" #month studied in this example
 migr = c(0,1)     # type of segment studied (0 = stationnary, 1 = migratory)
 birdRDS = list.files(path="data/Kittiwake_data", pattern = "Alkefjellet_nov2016")
 bird_data = readRDS(paste0("data/Kittiwake_data/", birdRDS)) %>% as.data.table
-bird_data_ = bird_data[as.logical(str_count(bird_data$timestamp, pattern = month))&bird_data$migr10 %in% migr] #data used
-bird_data_[, timestamp := as.POSIXct(bird_data_$timestamp)]
+bird_data_ = bird_data[as.logical(str_count(bird_data$timestamp, pattern = month))&bird_data$migr10 %in% migr] 
+bird_data_ = bird_data_[abs(as.numeric(format(bird_data_$timestamp, "%H"))-12)<6]
+bird_data_[, timestamp := as.POSIXct(bird_data_$timestamp)] #reduction of the dataset to the month and segment studied
 
 windRDS = list.files(path="data/ASCAT", pattern= 'ASCAT_daily_201611_wind.RDS')
 wind_data = readRDS(paste0("data/ASCAT/", windRDS)) %>% as.data.table
-wind_data_ = wind_data[as.logical(str_count(wind_data$datetime_, pattern = month))] #data used
+wind_data_ = wind_data[as.logical(str_count(wind_data$datetime_, pattern = month))]  #reduction of the dataset to the month and segment studied
 
 #GET BIRD SPEED AND DIRECTION ----
 setnames(bird_data_, c("lon","lat"),c("x", "y"))
@@ -66,11 +67,11 @@ bird_data_[, gspeed := gspeed]
 bird_data_[, gdir := gdir]
 
 #GET WIND ----
-w_datetime=unique(wind_data_$datetime_)
-bird_data_[, wind_time := closestDatetime(timestamp, w_datetime), by = 1:nrow(bird_data_)]
+w_datetime=unique(wind_data_$datetime_) #dates with available wind data
+bird_data_[, wind_time := closestDatetime(timestamp, w_datetime), by = 1:nrow(bird_data_)] #closest date with available wind data for each bird observation
 u_wind = c()
 v_wind = c()
-for (i in 1:nrow(bird_data_))
+for (i in 1:nrow(bird_data_)) #get the wind data at the given coordinates and dates
 {
   uv_wind = getWind(bird_data_$x[i], bird_data_$y[i], w = wind_data_[wind_data_$datetime_ == bird_data_$wind_time[i]], PROJ = proj.latlon)
   u_wind = append(u_wind, uv_wind[1])
@@ -81,18 +82,22 @@ bird_data_[, v_wind := as.numeric(v_wind)]
 
 #WIND SUPPORT, CROSS WIND, AIR SPEED ----
 
-bird_data_[, wdir := atan2(u_wind, v_wind)*180/pi, by = 1:nrow(bird_data_)]
-bird_data_[, wspeed     := sqrt(u_wind^2 + v_wind^2), by = 1:nrow(bird_data_)]
-bird_data_[, ws := wspeed*cosd(wdir - gdir)]
+bird_data_[, wdir := atan2(u_wind, v_wind)*180/pi, by = 1:nrow(bird_data_)] #wind direction
+bird_data_[, wspeed     := sqrt(u_wind^2 + v_wind^2), by = 1:nrow(bird_data_)] #wind speed
+bird_data_[, ws := wspeed*cosd(wdir -adir)] #wind support
+bird_data_[, cw := bird_data_$wspeed*sind(bird_data_$wdir-bird_data_$adir)] # Crosswind > 0 towards the right
+bird_data_[,adir := adir(bird_data_$gspeed, bird_data_$gdir, bird_data_$wspeed, bird_data_$wdir)] #air speed
+bird_data_[,aspeed := sqrt(bird_data_$gspeed^2+bird_data_$wspeed^2-2*bird_data_$gspeed*bird_data_$wspeed*cosd(bird_data_$wdir-bird_data_$gdir))]
 
-
-ws_track = c() #mean wind support on the individual tracks
+###ANALYSIS OF INDIVIDUALS TRACKS ----
+ws_track <- c() #mean wind support on the individual tracks
 for (i in unique(bird_data_$ring))
 {
-  ws_track = append(ws_track, sum(bird_data_$ws[bird_data_$ring==i]*bird_data_$gspeed[bird_data_$ring==i], na.rm = T))
+  ws_track <- append(ws_track, sum(bird_data_$ws[bird_data_$ring==i], na.rm = T))
 }
 track <- data.table(ring = unique(bird_data_$ring), ws = ws_track)
 
+###PLOTS###
 ggplot(data=bird_data_)+
   geom_histogram(aes(x=ws, color = migr10==1), fill = 'white')+
   geom_vline(data = bird_data_[migr10==1],aes(xintercept=mean(ws, na.rm = T)),
@@ -101,9 +106,7 @@ ggplot(data=bird_data_)+
              linetype="dashed", color = 'red')
 
 ggplot(data=track)+
-  geom_histogram(aes(x=ws))+
-  geom_vline(aes(xintercept=mean(ws, na.rm = T)),
-             linetype="dashed", color = 'blue')
+  geom_histogram(aes(x=ws))
 
 
 ###DISPLAY###
@@ -115,3 +118,15 @@ ggplot(data = bird_data_) +
   geom_sf(data=world ,fill = "black", color = "black") + 
   coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
 
+
+i = 60
+
+print(bird_data_[which(not(is.na(bird_data_$gdir)))[i]])
+
+ggplot(data=bird_data_[which(not(is.na(bird_data_$gdir)))[i]]) + 
+  geom_segment(aes(x = 0, y = 0, xend = gspeed*sind(gdir), yend = gspeed*cosd(gdir)), color = 'red', size = 1, arrow = arrow(length = unit(1, "cm"))) + #Ground 
+  geom_segment(aes(x = 0, y = 0, xend = wspeed*sind(wdir), yend = wspeed*cosd(wdir)), color = 'blue', size = 1, arrow = arrow(length = unit(1, "cm"))) + #Wind 
+  geom_segment(aes(x = 0, y = 0, xend = ws*sind(adir), yend = ws*cosd(adir)), color = 'black', size = 1, arrow = arrow(length = unit(1, "cm"))) + #wind support 
+  geom_segment(aes(x = 0, y = 0, xend = cw*sind(adir+90), yend = cw*cosd(adir+90)), color = 'black', size = 1, arrow = arrow(length = unit(1, "cm"))) + #crosswind
+  geom_segment(aes(x=0, y =0, xend =  aspeed*sind(adir), yend = aspeed*cosd(adir)), color = 'green', size = 1, arrow = arrow(length = unit(1, "cm")))+ #air
+  coord_fixed()

@@ -122,7 +122,7 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
 ###DISPLAY###
 world <- ne_countries(scale = "medium", returnclass = "sf")
 a=4 #Arrow size
-plottraj =  ggplot(data = bird_data_) + 
+plottraj =  ggplot(data = bird_data_) + geom_raster(aes(fill=n)) +
   geom_segment(size = 1, aes(x = x, y = y, xend = x2, yend = y2, color=migr10),arrow = arrow(length = unit(.15, "cm"))) +
   geom_point(aes(x,y),size =.7) +
   geom_sf(data=world ,fill = "black", color = "black") + 
@@ -133,7 +133,7 @@ plotbird =  ggplot(data = pxdata[not(is.na(pxdata$n))]) +
   scale_color_gradient("wind support", low = "red", high = "green") +
   geom_sf(data=world ,fill = "black", color = "black") + 
   coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
-plotwind = ggplot(data = pxdata) +
+plotwind = ggplot(data = pxdata)+
   geom_segment(size = 1, aes(x = x, y = y, xend = x+wspeed/a*sind(wdir), yend = y+wspeed/a*cosd(wdir)),arrow = arrow(length = unit(.15, "cm"))) +
   geom_sf(data=world ,fill = "black", color = "black") + 
   coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
