@@ -37,11 +37,11 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
 ###GET DATA ----
 month = "2016-11" #month studied in this example
 migr = c(0,1)     # type of segment studied (0 = stationnary, 1 = migratory)
-birdRDS = list.files(path="data/Kittiwake_data", pattern = "Alkefjellet_nov2016")
+birdRDS = list.files(path="data/Kittiwake_data", pattern = "Alkefjellet_cond_nov2016")
 bird_data = readRDS(paste0("data/Kittiwake_data/", birdRDS)) %>% as.data.table
-bird_data_ = bird_data[as.logical(str_count(bird_data$timestamp, pattern = month))&bird_data$migr10 %in% migr] 
-bird_data_ = bird_data_[abs(as.numeric(format(bird_data_$timestamp, "%H"))-12)<6]
-bird_data_[, timestamp := as.POSIXct(bird_data_$timestamp)] #reduction of the dataset to the month and segment studied
+bird_data[, timestamp := as.POSIXct(bird_data$timestamp)] 
+bird_data_ = bird_data[as.logical(str_count(bird_data$timestamp, pattern = month))&bird_data$migr10 %in% migr] #reduction of the dataset to the month and segment studied
+bird_data_ = bird_data_[abs(as.numeric(format(bird_data_$timestamp, "%H"))-12)<6] #keep one daily position
 
 windRDS = list.files(path="data/ASCAT", pattern= 'ASCAT_daily_201611_wind.RDS')
 wind_data = readRDS(paste0("data/ASCAT/", windRDS)) %>% as.data.table
@@ -63,7 +63,7 @@ for (i in (1:nrow(bird_data_)))
   gdir = append(gdir, geosphere::bearing(c(bird_data_$x[i], bird_data_$y[i]),c(bird_data_$x2[i], bird_data_$y2[i])))
   
 }
-bird_data_[, gspeed := gspeed]
+bird_data_[, gspeed := gspeed/(1-std_conductivity)]
 bird_data_[, gdir := gdir]
 
 #GET WIND ----
@@ -112,14 +112,14 @@ ggplot(data=track)+
 ###DISPLAY###
 world <- ne_countries(scale = "medium", returnclass = "sf")
 a=4 #Arrow size
-ggplot(data = bird_data_) + 
+ggplot(data = bird_data_[bird_data_$std_conductivity<0.75]) + 
   geom_segment(aes(x = x, y = y, xend = x2, yend = y2, color=ws),arrow = arrow(length = unit(.1, "cm"))) +
   scale_color_gradient("wind support", low = "red", high = "green") +
   geom_sf(data=world ,fill = "black", color = "black") + 
   coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
 
 
-i = 200
+i = 110
 
 print(bird_data_[which(not(is.na(bird_data_$gdir)))[i]])
 
