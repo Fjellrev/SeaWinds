@@ -65,7 +65,7 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
   {
     wdir = append(wdir, windR::bearing(0,0,wind_data_$u[i],wind_data_$v[i]))
   }
-  bird_data_[, gspeed := gspeed]
+  bird_data_[, gspeed := gspeed(1-bird_data_$std_conductivity)]
   bird_data_[, gdir := gdir]
   wind_data_[,wspeed := sqrt(wind_data_$u^2+wind_data_$v^2)]
   wind_data_[,wdir := wdir*180/pi]
