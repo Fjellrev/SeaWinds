@@ -25,7 +25,7 @@ actRDS <- list.files(path=path_act, pattern = id)
 act_data <- readRDS(paste0(path_act,"/",actRDS)) %>% as.data.table
 act_data[, timestamp := as.POSIXct(act_data$timestamp)]
 timestamp <- (unique(format(bird_data$timestamp[bird_data$ring==id])))
-tmean_act <- c()
+mean_act <- c()
 for (t in timestamp)
 {
 dt<-difftime(format(act_data$timestamp),t,units="hours")
