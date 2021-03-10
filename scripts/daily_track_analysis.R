@@ -84,8 +84,8 @@ bird_data_[, v_wind := as.numeric(v_wind)]
 
 bird_data_[, wdir := atan2(u_wind, v_wind)*180/pi, by = 1:nrow(bird_data_)] #wind direction
 bird_data_[, wspeed     := sqrt(u_wind^2 + v_wind^2), by = 1:nrow(bird_data_)] #wind speed
-bird_data_[, ws := wspeed*cosd(wdir -adir)] #wind support
-bird_data_[, cw := bird_data_$wspeed*sind(bird_data_$wdir-bird_data_$adir)] # Crosswind > 0 towards the right
+bird_data_[, ws := wspeed*cosd(wdir -gdir)] #wind support
+bird_data_[, cw := bird_data_$wspeed*sind(bird_data_$wdir-bird_data_$gdir)] # Crosswind > 0 towards the right
 bird_data_[,adir := adir(bird_data_$gspeed, bird_data_$gdir, bird_data_$wspeed, bird_data_$wdir)] #air speed
 bird_data_[,aspeed := sqrt(bird_data_$gspeed^2+bird_data_$wspeed^2-2*bird_data_$gspeed*bird_data_$wspeed*cosd(bird_data_$wdir-bird_data_$gdir))]
 
@@ -119,14 +119,14 @@ ggplot(data = bird_data_) +
   coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
 
 
-i = 60
+i = 200
 
 print(bird_data_[which(not(is.na(bird_data_$gdir)))[i]])
 
 ggplot(data=bird_data_[which(not(is.na(bird_data_$gdir)))[i]]) + 
   geom_segment(aes(x = 0, y = 0, xend = gspeed*sind(gdir), yend = gspeed*cosd(gdir)), color = 'red', size = 1, arrow = arrow(length = unit(1, "cm"))) + #Ground 
   geom_segment(aes(x = 0, y = 0, xend = wspeed*sind(wdir), yend = wspeed*cosd(wdir)), color = 'blue', size = 1, arrow = arrow(length = unit(1, "cm"))) + #Wind 
-  geom_segment(aes(x = 0, y = 0, xend = ws*sind(adir), yend = ws*cosd(adir)), color = 'black', size = 1, arrow = arrow(length = unit(1, "cm"))) + #wind support 
-  geom_segment(aes(x = 0, y = 0, xend = cw*sind(adir+90), yend = cw*cosd(adir+90)), color = 'black', size = 1, arrow = arrow(length = unit(1, "cm"))) + #crosswind
+  geom_segment(aes(x = 0, y = 0, xend = ws*sind(gdir), yend = ws*cosd(gdir)), color = 'black', size = 1, arrow = arrow(length = unit(1, "cm"))) + #wind support 
+  geom_segment(aes(x = 0, y = 0, xend = cw*sind(gdir+90), yend = cw*cosd(gdir+90)), color = 'black', size = 1, arrow = arrow(length = unit(1, "cm"))) + #crosswind
   geom_segment(aes(x=0, y =0, xend =  aspeed*sind(adir), yend = aspeed*cosd(adir)), color = 'green', size = 1, arrow = arrow(length = unit(1, "cm")))+ #air
   coord_fixed()
