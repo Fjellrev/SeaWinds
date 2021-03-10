@@ -20,17 +20,20 @@ bird_act <- data.table(ring=c(),timestamp=c(),std_cond=c())
 ring <- unique(bird_data$ring)
 for (id in ring)
 {
+cat(id)
 actRDS <- list.files(path=path_act, pattern = id)
-act_data <- readRDS(paste0(path_act,"/",actRDS))
-timestamp <- unique(format(act_data$timestamp, "%D"))
-mean_act <- c()
-for (d in timestamp)
+act_data <- readRDS(paste0(path_act,"/",actRDS)) %>% as.data.table
+act_data[, timestamp := as.POSIXct(act_data$timestamp)]
+timestamp <- (unique(format(bird_data$timestamp[bird_data$ring==id])))
+tmean_act <- c()
+for (t in timestamp)
 {
-mean_act <- append(mean_act, mean(act_data$std_conductivity[format(act_data$timestamp, "%D") == d], na.rm = T))
+dt<-difftime(format(act_data$timestamp),t,units="hours")
+mean_act <- append(mean_act, mean(act_data$std_conductivity[dt<12&dt>=0], na.rm = T))
 }
 bird_act <- rbind(bird_act, data.table(ring=rep(id, length(timestamp)),timestamp=timestamp, std_cond=mean_act))
 }
 
-bird_data[,std_conductivity := bird_act$std_cond[ring==bird_act$ring&format(timestamp, "%D")==bird_act$timestamp], by = 1:nrow(bird_data)]
+bird_data[,std_conductivity := bird_act$std_cond[ring==bird_act$ring&timestamp==bird_act$timestamp], by = 1:nrow(bird_data)]
 
 saveRDS(bird_data, paste0(path_bird,"/","BLKI_Alkefjellet_cond_nov2016.RDS"))
