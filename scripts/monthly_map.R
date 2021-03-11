@@ -37,7 +37,7 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
 ###GET DATA ----
   month = "2016-11" #month studied in this example
   migr = c(0,1)     # type of segment studied (0 = stationnary, 1 = migratory)
-  birdRDS = list.files(path="data/Kittiwake_data", pattern = "Alkefjellet_nov2016")
+  birdRDS = list.files(path="data/Kittiwake_data", pattern = "Alkefjellet_cond_nov2016")
   bird_data = readRDS(paste0("data/Kittiwake_data/", birdRDS)) %>% as.data.table
   bird_data_ = bird_data[as.logical(str_count(bird_data$timestamp, pattern = month))&bird_data$migr10 %in% migr] #data used
   
@@ -51,6 +51,7 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
   bird_data_[, x2 := data.table::shift(x, type = 'lead'), by = ring]
   bird_data_[, y2 := data.table::shift(y, type = 'lead'), by = ring]
   bird_data_[, dt := as.numeric(difftime(timestamp2, timestamp, units = 'sec'))]
+  bird_data_ <- bird_data_[bird_data_$std_conductivity < 0.9]
   
   gspeed = c()
   gdir=c()
@@ -65,7 +66,7 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
   {
     wdir = append(wdir, windR::bearing(0,0,wind_data_$u[i],wind_data_$v[i]))
   }
-  bird_data_[, gspeed := gspeed(1-bird_data_$std_conductivity)]
+  bird_data_[, gspeed := gspeed]
   bird_data_[, gdir := gdir]
   wind_data_[,wspeed := sqrt(wind_data_$u^2+wind_data_$v^2)]
   wind_data_[,wdir := wdir*180/pi]
@@ -84,7 +85,7 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
 ###CONVERT TO RASTER ----
   r <- raster(xmn=(min(bird_data_$x)-1), ymn=(min(bird_data_$y)-1), xmx=(max(bird_data_$x)+1), ymx=(max(bird_data_$y)+1), res=2)
   r.gdir <- rasterize(bird_data_[,c("x","y")], r, field = bird_data_$gdir, fun = function(x, na.rm=T) mean_angle(x))
-  r.gspeed <- rasterize(bird_data_[,c("x","y")], r, field = bird_data_$gspeed, fun = mean)
+  r.gspeed <- rasterize(bird_data_[,c("x","y")], r, field = bird_data_$gspeed/(1-bird_data_$std_conductivity), fun = mean)
   r.n <- rasterize(bird_data_[,c("x","y")], r, field = bird_data_$x2, fun = 'count')
   r.wdir <- rasterize(wind_data_[,c("x","y")],r, field = wind_data_$wdir, fun = function(x, na.rm=T) mean_angle(x))
   r.wspeed <- rasterize(wind_data_[,c("x","y")],r, field = wind_data_$wspeed,fun = mean)
@@ -122,7 +123,7 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
 ###DISPLAY###
 world <- ne_countries(scale = "medium", returnclass = "sf")
 a=4 #Arrow size
-plottraj =  ggplot(data = bird_data_) + geom_raster(aes(fill=n)) +
+plottraj =  ggplot(data = bird_data_)  +
   geom_segment(size = 1, aes(x = x, y = y, xend = x2, yend = y2, color=migr10),arrow = arrow(length = unit(.15, "cm"))) +
   geom_point(aes(x,y),size =.7) +
   geom_sf(data=world ,fill = "black", color = "black") + 
