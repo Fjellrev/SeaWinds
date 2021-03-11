@@ -8,7 +8,7 @@ sapply(c( 'raster','stringr', 'data.table', 'magrittr', 'sf', "rnaturalearthdata
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 
 pxdata = readRDS("outputs/monthly_pixel_data.rds")
-i = 180
+i = 11
 
 print(pxdata[which(not(is.na(pxdata$gdir)))[i]])
 
