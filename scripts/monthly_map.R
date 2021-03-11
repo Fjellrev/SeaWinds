@@ -51,7 +51,7 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
   bird_data_[, x2 := data.table::shift(x, type = 'lead'), by = ring]
   bird_data_[, y2 := data.table::shift(y, type = 'lead'), by = ring]
   bird_data_[, dt := as.numeric(difftime(timestamp2, timestamp, units = 'sec'))]
-  bird_data_ <- bird_data_[bird_data_$std_conductivity < 0.9]
+  bird_data_ <- bird_data_[bird_data_$std_conductivity < 0.9] #I have to remove the data with a conductivity too high
   
   gspeed = c()
   gdir=c()
@@ -122,18 +122,20 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
   
 ###DISPLAY###
 world <- ne_countries(scale = "medium", returnclass = "sf")
-a=4 #Arrow size
+
 plottraj =  ggplot(data = bird_data_)  +
   geom_segment(size = 1, aes(x = x, y = y, xend = x2, yend = y2, color=migr10),arrow = arrow(length = unit(.15, "cm"))) +
   geom_point(aes(x,y),size =.7) +
   geom_sf(data=world ,fill = "black", color = "black") + 
   coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
 
+a=7#Arrow size
 plotbird =  ggplot(data = pxdata[not(is.na(pxdata$n))]) + 
   geom_segment(size = 1, aes(x = x, y = y, xend = x+gspeed/a*sind(gdir), yend = y+gspeed/a*cosd(gdir), color=ws),arrow = arrow(length = unit(.15, "cm"))) +
   scale_color_gradient("wind support", low = "red", high = "green") +
   geom_sf(data=world ,fill = "black", color = "black") + 
   coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
+a=4
 plotwind = ggplot(data = pxdata)+
   geom_segment(size = 1, aes(x = x, y = y, xend = x+wspeed/a*sind(wdir), yend = y+wspeed/a*cosd(wdir)),arrow = arrow(length = unit(.15, "cm"))) +
   geom_sf(data=world ,fill = "black", color = "black") + 
