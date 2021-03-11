@@ -41,7 +41,7 @@ birdRDS = list.files(path="data/Kittiwake_data", pattern = "Alkefjellet_cond_nov
 bird_data = readRDS(paste0("data/Kittiwake_data/", birdRDS)) %>% as.data.table
 bird_data[, timestamp := as.POSIXct(bird_data$timestamp)] 
 bird_data_ = bird_data[as.logical(str_count(bird_data$timestamp, pattern = month))&bird_data$migr10 %in% migr] #reduction of the dataset to the month and segment studied
-bird_data_ = bird_data_[abs(as.numeric(format(bird_data_$timestamp, "%H"))-12)<6] #keep one daily position
+#bird_data_ = bird_data_[abs(as.numeric(format(bird_data_$timestamp, "%H"))-12)<6] #keep only one daily position
 
 windRDS = list.files(path="data/ASCAT", pattern= 'ASCAT_daily_201611_wind.RDS')
 wind_data = readRDS(paste0("data/ASCAT/", windRDS)) %>% as.data.table
@@ -53,6 +53,7 @@ bird_data_[, timestamp2 := data.table::shift(timestamp, type = 'lead'), by = rin
 bird_data_[, x2 := data.table::shift(x, type = 'lead'), by = ring]
 bird_data_[, y2 := data.table::shift(y, type = 'lead'), by = ring]
 bird_data_[, dt := as.numeric(difftime(timestamp2, timestamp, units = 'sec'))]
+bird_data_ <- bird_data_[bird_data_$std_conductivity < 0.89] #I have to remove the data with a conductivity too high
 
 gspeed = c()
 gdir=c()
@@ -112,17 +113,15 @@ ggplot(data=track)+
 ###DISPLAY###
 world <- ne_countries(scale = "medium", returnclass = "sf")
 a=4 #Arrow size
-ggplot(data = bird_data_[bird_data_$std_conductivity<0.75]) + 
+ggplot(data = bird_data_) + 
   geom_segment(aes(x = x, y = y, xend = x2, yend = y2, color=ws),arrow = arrow(length = unit(.1, "cm"))) +
   scale_color_gradient("wind support", low = "red", high = "green") +
   geom_sf(data=world ,fill = "black", color = "black") + 
   coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
 
 
-i = 110
 
-print(bird_data_[which(not(is.na(bird_data_$gdir)))[i]])
-
+i = 110 #display vectors
 ggplot(data=bird_data_[which(not(is.na(bird_data_$gdir)))[i]]) + 
   geom_segment(aes(x = 0, y = 0, xend = gspeed*sind(gdir), yend = gspeed*cosd(gdir)), color = 'red', size = 1, arrow = arrow(length = unit(1, "cm"))) + #Ground 
   geom_segment(aes(x = 0, y = 0, xend = wspeed*sind(wdir), yend = wspeed*cosd(wdir)), color = 'blue', size = 1, arrow = arrow(length = unit(1, "cm"))) + #Wind 
@@ -130,3 +129,6 @@ ggplot(data=bird_data_[which(not(is.na(bird_data_$gdir)))[i]]) +
   geom_segment(aes(x = 0, y = 0, xend = cw*sind(gdir+90), yend = cw*cosd(gdir+90)), color = 'black', size = 1, arrow = arrow(length = unit(1, "cm"))) + #crosswind
   geom_segment(aes(x=0, y =0, xend =  aspeed*sind(adir), yend = aspeed*cosd(adir)), color = 'green', size = 1, arrow = arrow(length = unit(1, "cm")))+ #air
   coord_fixed()
+
+saveRDS(bird_data_, file = "outputs/daily_tracks_analysed.rds")
+
