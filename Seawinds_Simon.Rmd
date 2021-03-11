@@ -20,6 +20,7 @@ sapply(c( 'raster','stringr', 'data.table', 'magrittr', 'sf', "rnaturalearthdata
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 
 pxdata = readRDS("outputs/monthly_pixel_data.rds")
+bird_data_ = readRDS("outputs/daily_tracks_analysed.rds")
 cosd <-function(x) cos(x*pi/180) 
 sind <-function(x) sin(x*pi/180)
 ```
@@ -40,6 +41,7 @@ The black-legged kittiwake, *Rissa tridactyla*, is a pelagic seabird breeding at
 
 Little is known concerning their movements outside the breeding season. Most kittiwakes from European colonies travel across the North-Atlantic to winter in the Labrador sea (Frederiksen et al., 2012; Swindells, n.d.). What determines the wintering? site of a given individual is unknown, with the principal wintering areas being shared between birds from many different colonies, whereas the birds from a given colony can winter in sites several thousand kilometers apart (Frederiksen et al., 2012; Orben et al., 2015; Swindells, n.d.). Kittiwakes generally winter in highly productive areas like oceanic gyres, shelf edges and upwelling zones (Frederiksen et al., 2012; Orben et al., 2015). These areas seem to provide more predictable resources (Weimerskirch, 2007) and kittiwake could thus specifically target them, travelling long distances without clear knowledge of the conditions at their arrival site. Furthermore, although black-legged kittiwakes are highly flexible regarding their wintering areas (important interannual variability), individual experiences seem to have an impact on the wintering destination of the birds, with individuals returning to previously visited areas more often than expected by chance (Orben et al., 2015). Together, prey predictability and individual experiences could explain the difference in wintering areas within and across colonies. Yet, for black-legged kittiwakes flying costs are high (Elliott et al., 2014) and reducing the energy expenditure to get to the foraging area could also impact their wintering distribution. **Wind may thus have an impact on their target destination by reducing the energy cost of the flight**. We could imagine that (1) wind at departure and during the flight partially determines the place of settlement; or that (2) birds time their departure according to the dominant wind to help them going to a determined place. In addition, beyond their migratory journey, foraging flight at their wintering location may represent important distances (no data found) and black-legged kittiwakes could adapt to wind conditions (either by avoiding strong wind, or by adjusting their heading to benefit from tailwind) in order to maximize the energy income while foraging. Finally, the effect of the weather conditions encountered in winter on their breeding success is unknown and it would be interesting to assess it.
 
+
 # 2. Methods used to study wind and migrations
 
 ## Wind data:
@@ -52,7 +54,7 @@ There could be an issue with the coverage of the daily data (due to the passage 
 To test this, I downloaded daily data of 2016-11. I counted the number of NA each day. As no data could be obtained above lands, many NA are only caused by the lands. I thus defined the size of the studied area as the number of pixels on the whole area, minus the minimal number of NA encountered. I quantified the relative difference between the daily number of NA and the size of the studied area. See the code and outputs below.
 
 ```{r, echo = TRUE}
-netcdf_ = list.files(path="data/ASCAT", pattern = "ASCAT_daily")
+netcdf_ = list.files(path="data/ASCAT", pattern = ".nc")
 
 u = brick(paste0("data/ASCAT/", netcdf_), varname = "x_wind")
 v = brick(paste0("data/ASCAT/", netcdf_), varname = "y_wind")
@@ -85,47 +87,194 @@ These data are used in (Hromádková et al., 2020; Krietsch et al., 2020) and (D
 ## Vectors used 
 
 ```{r, echo = FALSE}
-i = 3
+i = 25
 
-ggplot(data=pxdata[which(not(is.na(pxdata$gdir)))[i]]) + 
+ggplot(data=bird_data_[which(not(is.na(bird_data_$gdir)))[i]]) + 
   geom_segment(aes(x = 0, y = 0, xend = gspeed*sind(gdir), yend = gspeed*cosd(gdir)), color = 'red', size = 1, arrow = arrow(length = unit(1, "cm"))) + #Ground 
   geom_segment(aes(x = 0, y = 0, xend = wspeed*sind(wdir), yend = wspeed*cosd(wdir)), color = 'blue', size = 1, arrow = arrow(length = unit(1, "cm"))) + #Wind 
   geom_segment(aes(x = 0, y = 0, xend = ws*sind(gdir), yend = ws*cosd(gdir)), color = 'black', size = 1, arrow = arrow(length = unit(1, "cm"))) + #wind support 
   geom_segment(aes(x = 0, y = 0, xend = cw*sind(gdir+90), yend = cw*cosd(gdir+90)), color = 'black', size = 1, arrow = arrow(length = unit(1, "cm"))) + #crosswind
   geom_segment(aes(x=wspeed*sind(wdir), y =wspeed*cosd(wdir), xend = wspeed*sind(wdir) + aspeed*sind(adir), yend = wspeed*cosd(wdir) + aspeed*cosd(adir)), color = 'green', size = 1, arrow = arrow(length = unit(1, "cm"))) +#air
-ggtitle("Vectors used to characterize the bird’s movement in relation with the wind.\n Red: ground vector; Blue: wind vector; green: air vector;\n Black: cross wind and wind support vectors.")
+ggtitle("Vectors used to characterize the bird’s movement in relation with the wind.\n Red: ground vector; Blue: wind vector; green: air vector;\n Black: cross wind and wind support vectors.")+coord_fixed()
 ```
+
+To analyse the birds' track in relation with the wind, I defined several vector as follows:
+
+* Ground vector $\vec{V_g}$: bird's speed and direction relative to the ground. As birst don't spend the whole day flying, ground speed $||\vec{V_g}||$ is defined as follows: $||\vec{V_g}|| = d/ \Delta t(1-cond)$ where $d$ is the distance travelled between two positions, $dt$ the time between these two positons, and $cond$ is the mean conductivity recorded between $t$ and $t+dt$. $cond$ is a proxy of the fraction of the time spent in watter, thus, $(1-cond)$ is a proxy of the time spent flying.
+* Wind vector $\vec{V_w}$: daily or monthly wind vector derived from $u$ and $v$ wind speed obtained with the ASCAT datasets. The wind vector is decomposed into wind support $\vec{W_s}$, the projection of $\vec{V_w}$ on $\vec{V_g}$ and cross wind $\vec{V_c}$.
+* Air vector $\vec{V_a}$: bird's speed and direction relative to the air. $\vec{V_a} = \vec{V_g} - \vec{V_w}$
 
 ## Biases, spatial and temporal resolution, ... 
 CF Safi & al, 2013
 
-# 3. Problematic of the study
-Do black legged kittiwakes take advantage of winds (and currents?) when they migrate? Is their route adapted to take advantage of winds?
+# 3. Problematic and predictions
+Do black legged kittiwakes take advantage of winds when they migrate? Do they adapt their route and their flying behavior to take advantage of winds?
 
-1. Wind support on the actual track VS on randomly created tracks (we can use IRMA and only specify departure and arrival points (Fauchald et al., 2019)) or VS wind support bird would have encountered flying outbound by the inbound track and conversely (I’m afraid this second method won’t be informative enough) or VS strait line.
+**Predictions**:
 
-2.	I can make a “least cost map” (in terms of energy expenditure i.e. travel time + wind support) between two locations (a breeding colony and a wintering site) and study whether this map predicts the birds’ track. It could provide us with a map predicting the migratory routes based on wind data.
+1. Flying with tailwind reduces the energy cost of the flight and increases the ground speed.
 
-**NB**: I like the idea of a least cost map. We could for instance divide the studied area into a grid (same resolution as the wind data) and plot for each point the travel time (how to create a relevant proxy of the energy expenditure? 1/travel time? Wind support/travel time?) to go from departure to arrival by a bid that would pass by this point.
+* $V_a$ decreases with $WS$ and $V_g$ is constant if the bird minimizes energy expenditure. If the bird maximises travel speed, $V_a$ is constant and $V_g$ increases with $WS$.
 
-3. If we have enough time, an aspect I’m very interested in is the interannual (and intercolonial) variability of wind support: for instance, no annual variability in WS as well as a variability in wind conditions and migratory tracks could be indicative of behavioral adjustment to wind conditions (be it a shift in the migratory route or the destination).
+* Wind effect $V_a \propto V_g - V_a$ (I need to read papers about this one).
 
-**NB**: I’ll focus on the whole track, but it could be interesting/necessary to compare the migratory segments and the stationary ones. I can access the output of Françoise’s Lavielle segmentation to distinguish between the two types of movements. Maybe other types of segmentation could be necessary in our particular case (*e.g* residence time (CF Dell'Arccia & al.))
+2. The birds follow the tracks that takes most advantage of tailwind support.
 
-# 4. Monthly analysis 
+* Overall, $WS > 0$. This effect shall be stronger if we consider the individual tracks. 
+
+* Wind support is significantly higher on the actual track compared with wind support on randomly created tracks or on straight line.
+
+* Ground direction is correlated with wind direction.
+
+* On a least cost map (in terms of energy expenditure or travel time) between two locations, birds routes would use optimal pixels more than expected by chance. 
+
+3. Bird would adapt their flying vs resting behavior based on the wind encountered.
+
+* $cond$ increases with $V_w$ if the birds don't fly when the wind is too strong. 
+
+* $cond$ is lower for values of $u_{wind}$ and $v_{wind}$ matching the overall migration direction. A linear model could be informative ($cond = f(u_{wind}, v_{wind}, d)$ where $d$ is the distance to the colony).
+
+
+4. If we have enough time, an aspect I’m very interested in is the interannual (and intercolonial) variability of wind support: for instance, no annual variability in WS as well as a variability in wind conditions and migratory tracks could be indicative of behavioral adjustment to wind conditions (be it a shift in the migratory route or the destination).
+
+
+# 4. Analysis 
+To test these predictions, I have analyzed the birds' tracks by calculating the vectors defined above for all positions of all individuals. The same analysis was conducted, with wind and ground vectors averaged by month and by pixels (1° x 1°).
+
+**I removed from the study the points when birds traveled less than 10% of the day, because these points lead to huge groun speeds (the uncertainty due to the GLS becomes greater than the real movement)**
+
+***effect of wind speed on the ground and ir vectors*** (I didn't know how to link it to one of my predictions)
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+ggplot(data = bird_data_)+
+    geom_point(aes(x=wspeed, y = aspeed))+
+    xlab("Wind speed")+ylab("air speed") + ggtitle("Va = f(Vw), two daily individual positions")
+
+ggplot(data = bird_data_)+
+    geom_point(aes(x=wspeed, y = gspeed))+
+    xlab("Wind speed")+ylab("ground speed") + ggtitle("Vg = f(Vw), two daily individual positions")
+
+
+```
+
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+ggplot(data = pxdata)+
+    geom_point(aes(x=wspeed, y = aspeed))+
+    xlab("Wind speed")+ylab("air speed") + ggtitle("Va = f(Vw), monthly agregated data")
+
+ggplot(data = pxdata)+
+    geom_point(aes(x=wspeed, y = gspeed))+
+    xlab("Wind speed")+ylab("ground speed") + ggtitle("Vg = f(Vw), monthly agregated data")
+
+
+```
+
+
+1. ***Prediction 1***
+
+* $V_a$ and $V_g$ as a function of $WS$ 
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+###daily Analyses 
+ggplot(data = bird_data_)+ #Air speed as a function of wind support
+    geom_point(aes(x=ws, y = aspeed))+
+    geom_smooth(aes(x=ws, y = aspeed), method = "lm")+
+    xlab("Wind support")+ylab("air speed") + ggtitle("Va = f(WS), two daily individual positions")
+  
+  ggplot(data = bird_data_)+ #Ground speed as a function of wind support
+    geom_point(aes(x=ws, y = gspeed))+
+    geom_smooth(aes(x=ws, y = gspeed), method = "lm")+
+    xlab("Wind support")+ylab("ground speed") + ggtitle("Vg = f(WS), two daily individual positions")
+  
+```
+
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+###monthly analysis
+ggplot(data = pxdata)+ #Air speed as a function of wind support
+    geom_point(aes(x=ws, y = aspeed, size = gspeed))+
+    xlab("Wind support")+ylab("air speed") + ggtitle("Va = f(WS), monthly agregated data")
+  
+  ggplot(data = pxdata)+ #Ground speed as a function of wind support
+    geom_point(aes(x=ws, y = gspeed))+
+    xlab("Wind support")+ylab("ground speed") + ggtitle("Vg = f(WS), monthly agregated data")
+  
+```
+
+* Wind effect
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+###monthly analysis
+ggplot(data = bird_data_)+ #Air speed as a function of wind support
+    geom_point(aes(x=gspeed-aspeed, y = aspeed))+
+    xlab("Vg - Va")+ylab("Va") + ggtitle("wind effect, two daily individual positions")
+
+```
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+###monthly analysis
+ggplot(data = pxdata)+ #Air speed as a function of wind support
+    geom_point(aes(x=gspeed-aspeed, y = aspeed))+
+    xlab("Vg - Va")+ylab("Va") + ggtitle("wind effect, monthly agregated data")
+
+```
+
+
+
+2. ***Prediction 2***
+
+* Overall value of wind support:
+
+```{r, echo = FALSE, warning = FALSE}
+
+ggplot(bird_data_) + geom_histogram(aes(x=ws))+ geom_vline(aes(xintercept=mean(ws, na.rm = T)),linetype="dashed") + ggtitle("histogram of wind support encountered by the birds while travelling") +xlab("wind support")
+```
+
+Using two values of wind support per day, based on the daily wind conditions we find that $WS > 0$ $(***)$. Using monthly agregated values, it appears that this information is lost, $WS$ is not significantly different from 0 (See histogram below).
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+ ggplot(data = pxdata)+ #histogram of wind support 
+    geom_histogram(aes(x=ws))+ geom_vline(aes(xintercept=mean(ws, na.rm = T)),linetype="dashed")+
+    ggtitle("histogram of wind support averaged using monthly agregated data")+
+    xlab("Wind support")
+```
+
+Furthermore, wind support averaged for each of the individual tracks is strongly positive (see histogram below), suggesting that birds do take optimal routes.
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+ws_track <- c() #mean wind support on the individual tracks
+for (i in unique(bird_data_$ring))
+{
+  ws_track <- append(ws_track, sum(bird_data_$ws[bird_data_$ring==i], na.rm = T))
+}
+track <- data.table(ring = unique(bird_data_$ring), ws = ws_track)
+
+ggplot(data=track)+
+  geom_histogram(aes(x=ws))+ geom_vline(aes(xintercept=mean(ws, na.rm = T)),linetype="dashed")+
+    ggtitle("histogram of wind support averaged for each individual track")+
+    xlab("Wind support")
+
+```
+
+
+* correlation between wind direction and ground direction
+
+I don't know how to test this correlation. I tried with a circular correlation coefficient and found $r^2 \simeq -0.23$ with a p-value $< 0.001$. I don't know how relevant this coefficient is. I also found that a coefficient called $\rho_v^2$ would be relevant (many references using this coefficients) but I haven't yet found how to compute it with R. 
 
 I plotted on maps of the North Atlantic Ocean the mean wind direction and speed, and the mean ground direction and speed of the birds (see below). 
 
 ```{r, echo = FALSE, warning = FALSE}
 world <- ne_countries(scale = "medium", returnclass = "sf")
-a=4 #Arrow size
 
+a =7
 ggplot(data = pxdata[not(is.na(pxdata$n))]) + 
   geom_segment(aes(x = x, y = y, xend = x+gspeed/a*sind(gdir), yend = y+gspeed/a*cosd(gdir), color=ws),arrow = arrow(length = unit(.1, "cm"))) +
   scale_color_gradient("wind support", low = "red", high = "green") +
   geom_sf(data=world ,fill = "black", color = "black") + 
   coord_sf(xlim = c(min(pxdata$x)-1, max(pxdata$x)+1), ylim = c(min(pxdata$y)-1, max(pxdata$y)+1), expand = FALSE)+
   ggtitle("Map of the Atlantic ocean showing the birds’ movement.\n The wind support encountered by the birds is represented \n with a gradient color.")
+a=4 #Arrow size
 ggplot(data = pxdata) +
   geom_segment(aes(x = x, y = y, xend = x+wspeed/a*sind(wdir), yend = y+wspeed/a*cosd(wdir)),arrow = arrow(length = unit(.1, "cm"))) +
   geom_sf(data=world ,fill = "black", color = "black") + 
@@ -135,44 +284,18 @@ ggplot(data = pxdata) +
 
 ```
 
+3. ***Prediction 3***
 
-***In order to study the relationship between wind and the birds’ movement, I make some predictions that I will test:***
+```{r, echo = FALSE, warning = FALSE}
 
-1.	Ground direction on a pixel is correlated with wind direction on the same pixel.
+ggplot(data = bird_data_)+
+  geom_point(aes(x=wspeed, y =1-std_conductivity))+xlab("wind speed")+ylab("time spent flying")
 
-I don't know how to test this correlation. I tried with a circular correlation coefficient and found $r^2 \simeq -0.23$ with a p-value $< 0.001$. I don't know how relevant this coefficient is. I also found that a coefficient called $\rho_v^2$ would be relevant (many references using this coefficients) but I haven't yet found how to compute it with R. 
+ggplot(data = bird_data_)+
+  geom_point(aes(x=u_wind, y =1-std_conductivity))+xlab("u wind")+ylab("time spent flying")
 
-2.	Overall, WS > 0. On migratory segments, this effect shall be stronger.
+ggplot(data = bird_data_)+
+  geom_point(aes(x=v_wind, y =1-std_conductivity))+xlab("v wind")+ylab("time spent flying")
 
-```{r, echo = FALSE, warning = FALSE, message = FALSE}
- ggplot(data = pxdata)+ #histogram of wind support 
-    geom_histogram(aes(x=ws))+
-    xlab("Wind support")
-  print(paste0("mean wind support :", mean(pxdata$ws, na.rm = T)))
 ```
-
-This result is a bit surprising. It shows that WS is distributed around 0, with a mean Wind Support not significantly different from 0, suggested that bird do not adjust their journey to take advantage of winds. I tried to focus only on the migratory segments (using the outputs of Amélineau in prep. 2020 or by defining new migratory segments using for each location the distance travelled the following days. This distance is supposed to be greater on the migratory segments, when the trajectory is rather straight). Using only theses segments, the result is the same.
-This may come from the lack of tracks studied or the month. Running this simulation with more colonies and more months is necessary to push the study further. It may also be a consequence of the temporal resolution. Linking bird movements with the wind encountered on a specific day could enable us to see more clearly the relation between wind direction and the bird's heading.
-
-3.	If the bird maximizes travel speed: Gspeed increases with WS and airspeed is constant. If the birds minimize the energy expenditure: Gspeed is constant but airspeed decreases with WS. We can imagine that birds on migratory segments maximize travel speed while they minimize the energy expenditure on stationary segments.
-
-```{r, echo = FALSE, warning = FALSE, message = FALSE}
-ggplot(data = pxdata)+ #Air speed as a function of wind support
-    geom_point(aes(x=ws, y = aspeed, size = gspeed))+
-    geom_smooth(aes(x=ws, y = aspeed), method = "lm")+
-    xlab("Wind support")+ylab("air speed")
-  
-  ggplot(data = pxdata)+ #Ground speed as a function of wind support
-    geom_point(aes(x=ws, y = gspeed))+
-    geom_smooth(aes(x=ws, y = gspeed), method = "lm")+
-    xlab("Wind support")+ylab("ground speed")
-  
-```
-Together these graphs strongly suggest that birds seek to minimize their energy expenditure: their ground speed is constant whatever the wind support encountered but their head-speed (directly related to their energy expenditure) decreases with increasing wind support. The same trend was found focusing on the migratory segments only.
-
-Nevertheless, when we look at the definition of airspeed (see the section *vectors used* above) the fact that it decreases with wind support is obvious ($\vec{a_s} = \vec{g_s}-\vec{w_s}=\vec{g_s}-\vec{WS} - \vec{CW}$). I don't know if the graph still means something. In a way, I think that the important fact is that ground speed doesn't increase with wind support, the fact that air speed decreases is a consequence of that.
-
-4.	WS is higher on the migratory path compared with the straight line.  
-
-I can maybe test the hypothesis : Wind Support is statistically higher along the migratory route (*i.e* between Greenland and Iceland) with an ANOVA.
 
