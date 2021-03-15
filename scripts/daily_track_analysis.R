@@ -47,7 +47,18 @@ windRDS = list.files(path="data/ASCAT", pattern= 'ASCAT_daily_201611_wind.RDS')
 wind_data = readRDS(paste0("data/ASCAT/", windRDS)) %>% as.data.table
 wind_data_ = wind_data[as.logical(str_count(wind_data$datetime_, pattern = month))]  #reduction of the dataset to the month and segment studied
 
-#GET BIRD SPEED AND DIRECTION ----
+###GET MIGRATORY SEGMENTS ----
+bird_data_[, migrx := data.table::shift(x, n = 6L, type = 'lead'), by = ring]
+bird_data_[, migry := data.table::shift(y, n = 6L, type = 'lead'), by = ring]
+
+dist_migr=c()
+for (i in (1:nrow(bird_data_)))
+{
+dist_migr = append(dist_migr,distGeo(c(bird_data_$x[i], bird_data_$y[i]),c(bird_data_$migrx[i], bird_data_$migry[i])))
+}
+bird_data_[, migr10 := as.numeric(dist_migr>3e+05)]
+
+###GET BIRD SPEED AND DIRECTION ----
 setnames(bird_data_, c("lon","lat"),c("x", "y"))
 bird_data_[, timestamp2 := data.table::shift(timestamp, type = 'lead'), by = ring]
 bird_data_[, x2 := data.table::shift(x, type = 'lead'), by = ring]
@@ -90,7 +101,7 @@ bird_data_[, cw := bird_data_$wspeed*sind(bird_data_$wdir-bird_data_$gdir)] # Cr
 bird_data_[,adir := adir(bird_data_$gspeed, bird_data_$gdir, bird_data_$wspeed, bird_data_$wdir)] #air speed
 bird_data_[,aspeed := sqrt(bird_data_$gspeed^2+bird_data_$wspeed^2-2*bird_data_$gspeed*bird_data_$wspeed*cosd(bird_data_$wdir-bird_data_$gdir))]
 
-###ANALYSIS OF INDIVIDUALS TRACKS ----
+###ANALYSIS----
 ws_track <- c() #mean wind support on the individual tracks
 for (i in unique(bird_data_$ring))
 {
@@ -113,9 +124,9 @@ ggplot(data=track)+
 ###DISPLAY###
 world <- ne_countries(scale = "medium", returnclass = "sf")
 a=4 #Arrow size
-ggplot(data = bird_data_) + 
-  geom_segment(aes(x = x, y = y, xend = x2, yend = y2, color=ws),arrow = arrow(length = unit(.1, "cm"))) +
-  scale_color_gradient("wind support", low = "red", high = "green") +
+ggplot(data = bird_data_[bird_data_$migr10==0]) + 
+  geom_segment(aes(x = x, y = y, xend = x2, yend = y2, color=migr10),arrow = arrow(length = unit(.1, "cm"))) +
+  scale_color_gradient(low = "red", high = "green") +
   geom_sf(data=world ,fill = "black", color = "black") + 
   coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
 
