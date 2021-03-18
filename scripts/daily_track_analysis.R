@@ -12,7 +12,7 @@ proj.latlon <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 path_bird= "data/Kittiwake_data_treated"
 path_wind = "data/ASCAT"
 
-cosd <-function(x) cos(x*pi/180) #degrees 
+cosd <-function(x) cos(x*pi/180) #cos of an angle in degrees 
 sind <-function(x) sin(x*pi/180) 
 mean_angle <-function(x) #calculates mean angle by decomposing it in u and v components
 {
@@ -39,11 +39,10 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
 
 ###GET DATA ----
 month = "2016-11" #month studied in this example
-migr = c(0,1)     # type of segment studied (0 = stationnary, 1 = migratory)
 birdRDS = list.files(path=path_bird, pattern = "5col")
 bird_data = readRDS(paste0(path_bird,'/', birdRDS)) %>% as.data.table
 bird_data[, timestamp := as.POSIXct(bird_data$timestamp)] 
-bird_data_ = bird_data[as.logical(str_count(bird_data$timestamp, pattern = month))&bird_data$migr10 %in% migr] #reduction of the dataset to the month and segment studied
+bird_data_ = bird_data#[as.logical(str_count(bird_data$timestamp, pattern = month))] #reduction of the dataset to the month and segment studied
 
 windRDS = list.files(path=path_wind, pattern= 'ASCAT_daily_201611_wind.RDS')
 wind_data = readRDS(paste0(path_wind,"/", windRDS)) %>% as.data.table
@@ -58,7 +57,7 @@ wind_data_ = wind_data[as.logical(str_count(wind_data$datetime_, pattern = month
 #{
 #dist_migr = append(dist_migr,distGeo(c(bird_data_$x[i], bird_data_$y[i]),c(bird_data_$migrx[i], bird_data_$migry[i])))
 #}
-#bird_data_[, migr10 := as.numeric(dist_migr>3e+05)] #migratory segments = move more than 300km in 3 days
+#bird_data_[, migr_rt := as.numeric(dist_migr>3e+05)] #migratory segments = move more than 300km in 3 days
 
 ###GET BIRD SPEED AND DIRECTION ----
 setnames(bird_data_, c("lon","lat"),c("x", "y"))
