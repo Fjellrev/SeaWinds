@@ -33,6 +33,6 @@ mean_act <- append(mean_act, mean(act_data$std_conductivity[format(act_data$time
 bird_act <- rbind(bird_act, data.table(ring=rep(id, length(id_timestamp)),timestamp=id_timestamp, std_cond=mean_act))
 }
 
-bird_data[,std_conductivity := bird_act$std_cond[ring==bird_act$ring&timestamp==bird_act$timestamp], by = 1:nrow(bird_data)]
+bird_data[,std_conductivity := bird_act$std_cond]
 
-saveRDS(bird_data, paste0(path_bird,"/","BLKI_5col_cond_sept_dec2016RDS"))
+saveRDS(bird_data, paste0("data/Kittiwake_data_treated","/","BLKI_5col_cond_sept_dec2016.RDS"))
