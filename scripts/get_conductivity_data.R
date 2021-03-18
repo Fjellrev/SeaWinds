@@ -10,10 +10,10 @@ path_act = "data/activity"
 path_bird = "data/Kittiwake_data"
   
 ###GET BIRD DATA ----
-birdRDS <- list.files(path=path_bird, pattern = "Alkefjellet_nov2016")
+birdRDS <- list.files(path=path_bird, pattern = "5col")
 bird_data <- readRDS(paste0(path_bird,"/", birdRDS)) %>% as.data.table
 bird_data[, timestamp := as.POSIXct(bird_data$timestamp)]
-
+bird_data = bird_data[abs(as.numeric(format(bird_data$timestamp, "%H"))-12)>6] #keep only the midnight positions
 ###ADD THE ACTIVITY DATA ----
 bird_act <- data.table(ring=c(),timestamp=c(),std_cond=c())
 
@@ -24,16 +24,15 @@ cat(id)
 actRDS <- list.files(path=path_act, pattern = id)
 act_data <- readRDS(paste0(path_act,"/",actRDS)) %>% as.data.table
 act_data[, timestamp := as.POSIXct(act_data$timestamp)]
-timestamp <- (unique(format(bird_data$timestamp[bird_data$ring==id])))
+id_timestamp <- as.POSIXct(bird_data$timestamp[bird_data$ring==id])
 mean_act <- c()
-for (t in timestamp)
+for (t in format(id_timestamp, "%D"))
 {
-dt<-difftime(format(act_data$timestamp),t,units="hours")
-mean_act <- append(mean_act, mean(act_data$std_conductivity[dt<12&dt>=0], na.rm = T))
+mean_act <- append(mean_act, mean(act_data$std_conductivity[format(act_data$timestamp, "%D") ==t], na.rm = T))
 }
-bird_act <- rbind(bird_act, data.table(ring=rep(id, length(timestamp)),timestamp=timestamp, std_cond=mean_act))
+bird_act <- rbind(bird_act, data.table(ring=rep(id, length(id_timestamp)),timestamp=id_timestamp, std_cond=mean_act))
 }
 
 bird_data[,std_conductivity := bird_act$std_cond[ring==bird_act$ring&timestamp==bird_act$timestamp], by = 1:nrow(bird_data)]
 
-saveRDS(bird_data, paste0(path_bird,"/","BLKI_Alkefjellet_cond_nov2016.RDS"))
+saveRDS(bird_data, paste0(path_bird,"/","BLKI_5col_cond_sept_dec2016RDS"))
