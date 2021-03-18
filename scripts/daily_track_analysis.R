@@ -9,6 +9,9 @@ sapply(c( 'raster','stringr', 'data.table', 'magrittr', 'sf', "rnaturalearthdata
 
 proj.latlon <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" #classic longlat projection to use the windR function
 
+path_bird= "data/Kittiwake_data_treated"
+path_wind = "data/ASCAT"
+
 cosd <-function(x) cos(x*pi/180) #degrees 
 sind <-function(x) sin(x*pi/180) 
 mean_angle <-function(x) #calculates mean angle by decomposing it in u and v components
@@ -37,26 +40,25 @@ adir <- function(gspeed, gdir, wspeed, wdir) #get air direction
 ###GET DATA ----
 month = "2016-11" #month studied in this example
 migr = c(0,1)     # type of segment studied (0 = stationnary, 1 = migratory)
-birdRDS = list.files(path="data/Kittiwake_data", pattern = "Alkefjellet_cond_nov2016")
-bird_data = readRDS(paste0("data/Kittiwake_data/", birdRDS)) %>% as.data.table
+birdRDS = list.files(path=path_bird, pattern = "5col")
+bird_data = readRDS(paste0(path_bird,'/', birdRDS)) %>% as.data.table
 bird_data[, timestamp := as.POSIXct(bird_data$timestamp)] 
 bird_data_ = bird_data[as.logical(str_count(bird_data$timestamp, pattern = month))&bird_data$migr10 %in% migr] #reduction of the dataset to the month and segment studied
-#bird_data_ = bird_data_[abs(as.numeric(format(bird_data_$timestamp, "%H"))-12)<6] #keep only one daily position
 
-windRDS = list.files(path="data/ASCAT", pattern= 'ASCAT_daily_201611_wind.RDS')
-wind_data = readRDS(paste0("data/ASCAT/", windRDS)) %>% as.data.table
+windRDS = list.files(path=path_wind, pattern= 'ASCAT_daily_201611_wind.RDS')
+wind_data = readRDS(paste0(path_wind,"/", windRDS)) %>% as.data.table
 wind_data_ = wind_data[as.logical(str_count(wind_data$datetime_, pattern = month))]  #reduction of the dataset to the month and segment studied
 
-###GET MIGRATORY SEGMENTS ----
-bird_data_[, migrx := data.table::shift(x, n = 6L, type = 'lead'), by = ring]
-bird_data_[, migry := data.table::shift(y, n = 6L, type = 'lead'), by = ring]
+###GET MIGRATORY SEGMENTS ---- based on the residency time
+#bird_data_[, migrx := data.table::shift(x, n = 6L, type = 'lead'), by = ring] #get coordinates 3 days later
+#bird_data_[, migry := data.table::shift(y, n = 6L, type = 'lead'), by = ring]
 
-dist_migr=c()
-for (i in (1:nrow(bird_data_)))
-{
-dist_migr = append(dist_migr,distGeo(c(bird_data_$x[i], bird_data_$y[i]),c(bird_data_$migrx[i], bird_data_$migry[i])))
-}
-bird_data_[, migr10 := as.numeric(dist_migr>3e+05)]
+#dist_migr=c()
+#for (i in (1:nrow(bird_data_)))
+#{
+#dist_migr = append(dist_migr,distGeo(c(bird_data_$x[i], bird_data_$y[i]),c(bird_data_$migrx[i], bird_data_$migry[i])))
+#}
+#bird_data_[, migr10 := as.numeric(dist_migr>3e+05)] #migratory segments = move more than 300km in 3 days
 
 ###GET BIRD SPEED AND DIRECTION ----
 setnames(bird_data_, c("lon","lat"),c("x", "y"))
@@ -64,7 +66,6 @@ bird_data_[, timestamp2 := data.table::shift(timestamp, type = 'lead'), by = rin
 bird_data_[, x2 := data.table::shift(x, type = 'lead'), by = ring]
 bird_data_[, y2 := data.table::shift(y, type = 'lead'), by = ring]
 bird_data_[, dt := as.numeric(difftime(timestamp2, timestamp, units = 'sec'))]
-bird_data_ <- bird_data_[bird_data_$std_conductivity < 0.89] #I have to remove the data with a conductivity too high
 
 gspeed = c()
 gdir=c()
