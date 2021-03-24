@@ -7,7 +7,8 @@
 sapply(c( 'raster','stringr', 'data.table', 'magrittr', 'sf', "rnaturalearthdata","rnaturalearth", 'windR', 'geosphere', 'ggplot2', 'circular'),
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 
-cosd <-function(x) cos(x*pi/180) #cos of an angle in degrees 
+cosd <-function(x) cos(x*pi/180) #cos of an angle in degrees
+sind <- function(x) sin(x*pi/180)
 
 path_wind<- "data/ERA-Interrim"
 
@@ -23,15 +24,15 @@ world <- ne_countries(scale = "medium", returnclass = "sf")
 a <- 0.1 #size of the arrows
 day <- 5 #day we want to see the wind conditions
 
-ggplot(data = wind_sfc[datetime_==unique(wind_sfc$datetime_)[day]])+
-  geom_segment(size = 1, aes(x = x, y = y, xend = x+a*u, yend = y+a*v),arrow = arrow(length = unit(.09, "cm"))) +
-  geom_sf(data=world ,fill = "black", color = "black") + 
-  coord_sf(xlim = c(min(wind_sfc$x)-1, max(wind_sfc$x)+1), ylim = c(min(wind_sfc$y)-1, max(wind_sfc$y)+1), expand = FALSE)
+#ggplot(data = wind_sfc[datetime_==unique(wind_sfc$datetime_)[day]])+
+  #geom_segment(size = 1, aes(x = x, y = y, xend = x+a*u, yend = y+a*v),arrow = arrow(length = unit(.09, "cm"))) +
+  #geom_sf(data=world ,fill = "black", color = "black") + 
+  #coord_sf(xlim = c(min(wind_sfc$x)-1, max(wind_sfc$x)+1), ylim = c(min(wind_sfc$y)-1, max(wind_sfc$y)+1), expand = FALSE)
 
-ggplot(data = wind_100[datetime_==unique(wind_100$datetime_)[day]])+
-  geom_segment(size = 1, aes(x = x, y = y, xend = x+a*u, yend = y+a*v),arrow = arrow(length = unit(.09, "cm"))) +
-  geom_sf(data=world ,fill = "black", color = "black") + 
-  coord_sf(xlim = c(min(wind_sfc$x)-1, max(wind_sfc$x)+1), ylim = c(min(wind_sfc$y)-1, max(wind_sfc$y)+1), expand = FALSE)
+#ggplot(data = wind_100[datetime_==unique(wind_100$datetime_)[day]])+
+  #geom_segment(size = 1, aes(x = x, y = y, xend = x+a*u, yend = y+a*v),arrow = arrow(length = unit(.09, "cm"))) +
+  #geom_sf(data=world ,fill = "black", color = "black") + 
+  #coord_sf(xlim = c(min(wind_sfc$x)-1, max(wind_sfc$x)+1), ylim = c(min(wind_sfc$y)-1, max(wind_sfc$y)+1), expand = FALSE)
 
 ###Compare the speed and direction---
 
