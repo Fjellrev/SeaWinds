@@ -45,7 +45,7 @@ bird_data[, timestamp := as.POSIXct(bird_data$timestamp)]
 bird_data_ = bird_data#[as.logical(str_count(bird_data$timestamp, pattern = month))] #reduction of the dataset to the month and segment studied
 setnames(bird_data_, c("lon","lat"),c("x", "y"))
 
-windRDS = list.files(path=path_wind, pattern= 'ASCAT_daily_wind_09_12_2016.RDS')
+windRDS = list.files(path=path_wind, pattern= 'ASCAT_daily_09_2016_to_12_2016.RDS')
 wind_data = readRDS(paste0(path_wind,"/", windRDS)) %>% as.data.table
 wind_data_ = wind_data#[as.logical(str_count(wind_data$datetime_, pattern = month))]  #reduction of the dataset to the month and segment studied
 
@@ -102,45 +102,5 @@ bird_data_[, cw := bird_data_$wspeed*sind(bird_data_$wdir-bird_data_$gdir)] # Cr
 bird_data_[,adir := adir(bird_data_$gspeed, bird_data_$gdir, bird_data_$wspeed, bird_data_$wdir)] #air speed
 bird_data_[,aspeed := sqrt(bird_data_$gspeed^2+bird_data_$wspeed^2-2*bird_data_$gspeed*bird_data_$wspeed*cosd(bird_data_$wdir-bird_data_$gdir))]
 
-###ANALYSIS----
-ws_track <- c() #mean wind support on the individual tracks
-for (i in unique(bird_data_$ring))
-{
-  ws_track <- append(ws_track, sum(bird_data_$ws[bird_data_$ring==i], na.rm = T))
-}
-track <- data.table(ring = unique(bird_data_$ring), ws = ws_track)
-
-###PLOTS###
-ggplot(data=bird_data_)+
-  geom_histogram(aes(x=ws, color = migr10==1), fill = 'white')+
-  geom_vline(data = bird_data_[migr10==1],aes(xintercept=mean(ws, na.rm = T)),
-             linetype="dashed", color = 'blue')+
-  geom_vline(data = bird_data_[migr10==0],aes(xintercept=mean(ws, na.rm = T)),
-             linetype="dashed", color = 'red')
-
-ggplot(data=track)+
-  geom_histogram(aes(x=ws))
-
-
-###DISPLAY###
-world <- ne_countries(scale = "medium", returnclass = "sf")
-a=4 #Arrow size
-ggplot(data = bird_data_[bird_data_$migr10==0]) + 
-  geom_segment(aes(x = x, y = y, xend = x2, yend = y2, color=migr10),arrow = arrow(length = unit(.1, "cm"))) +
-  scale_color_gradient(low = "red", high = "green") +
-  geom_sf(data=world ,fill = "black", color = "black") + 
-  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
-
-
-
-i = 110 #display vectors
-ggplot(data=bird_data_[which(not(is.na(bird_data_$gdir)))[i]]) + 
-  geom_segment(aes(x = 0, y = 0, xend = gspeed*sind(gdir), yend = gspeed*cosd(gdir)), color = 'red', size = 1, arrow = arrow(length = unit(1, "cm"))) + #Ground 
-  geom_segment(aes(x = 0, y = 0, xend = wspeed*sind(wdir), yend = wspeed*cosd(wdir)), color = 'blue', size = 1, arrow = arrow(length = unit(1, "cm"))) + #Wind 
-  geom_segment(aes(x = 0, y = 0, xend = ws*sind(gdir), yend = ws*cosd(gdir)), color = 'black', size = 1, arrow = arrow(length = unit(1, "cm"))) + #wind support 
-  geom_segment(aes(x = 0, y = 0, xend = cw*sind(gdir+90), yend = cw*cosd(gdir+90)), color = 'black', size = 1, arrow = arrow(length = unit(1, "cm"))) + #crosswind
-  geom_segment(aes(x=0, y =0, xend =  aspeed*sind(adir), yend = aspeed*cosd(adir)), color = 'green', size = 1, arrow = arrow(length = unit(1, "cm")))+ #air
-  coord_fixed()
-
+###SAVING ---- 
 saveRDS(bird_data_, file = "outputs/daily_tracks_analysed.rds")
-
