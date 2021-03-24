@@ -1,6 +1,6 @@
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##
-## SeaWinds - Testing wind data
+## SeaWinds - Testing how many na are present in a wind dataset
 ##
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

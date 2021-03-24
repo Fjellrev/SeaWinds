@@ -43,24 +43,24 @@ birdRDS = list.files(path=path_bird, pattern = "5col")
 bird_data = readRDS(paste0(path_bird,'/', birdRDS)) %>% as.data.table
 bird_data[, timestamp := as.POSIXct(bird_data$timestamp)] 
 bird_data_ = bird_data#[as.logical(str_count(bird_data$timestamp, pattern = month))] #reduction of the dataset to the month and segment studied
+setnames(bird_data_, c("lon","lat"),c("x", "y"))
 
-windRDS = list.files(path=path_wind, pattern= 'ASCAT_daily_201611_wind.RDS')
+windRDS = list.files(path=path_wind, pattern= 'ASCAT_daily_wind_09_12_2016.RDS')
 wind_data = readRDS(paste0(path_wind,"/", windRDS)) %>% as.data.table
-wind_data_ = wind_data[as.logical(str_count(wind_data$datetime_, pattern = month))]  #reduction of the dataset to the month and segment studied
+wind_data_ = wind_data#[as.logical(str_count(wind_data$datetime_, pattern = month))]  #reduction of the dataset to the month and segment studied
 
 ###GET MIGRATORY SEGMENTS ---- based on the residency time
-#bird_data_[, migrx := data.table::shift(x, n = 6L, type = 'lead'), by = ring] #get coordinates 3 days later
-#bird_data_[, migry := data.table::shift(y, n = 6L, type = 'lead'), by = ring]
+bird_data_[, migrx := data.table::shift(x, n = 6L, type = 'lead'), by = ring] #get coordinates 3 days later
+bird_data_[, migry := data.table::shift(y, n = 6L, type = 'lead'), by = ring]
 
-#dist_migr=c()
-#for (i in (1:nrow(bird_data_)))
-#{
-#dist_migr = append(dist_migr,distGeo(c(bird_data_$x[i], bird_data_$y[i]),c(bird_data_$migrx[i], bird_data_$migry[i])))
-#}
-#bird_data_[, migr_rt := as.numeric(dist_migr>3e+05)] #migratory segments = move more than 300km in 3 days
-
+dist_migr=c()
+for (i in (1:nrow(bird_data_)))
+{
+dist_migr = append(dist_migr,distGeo(c(bird_data_$x[i], bird_data_$y[i]),c(bird_data_$migrx[i], bird_data_$migry[i])))
+}
+bird_data_[, migr_rt := as.numeric(dist_migr>3e+05)] #migratory segments = move more than 300km in 3 days
+  
 ###GET BIRD SPEED AND DIRECTION ----
-setnames(bird_data_, c("lon","lat"),c("x", "y"))
 bird_data_[, timestamp2 := data.table::shift(timestamp, type = 'lead'), by = ring]
 bird_data_[, x2 := data.table::shift(x, type = 'lead'), by = ring]
 bird_data_[, y2 := data.table::shift(y, type = 'lead'), by = ring]
@@ -85,6 +85,7 @@ u_wind = c()
 v_wind = c()
 for (i in 1:nrow(bird_data_)) #get the wind data at the given coordinates and dates
 {
+  cat(paste0(i," "))
   uv_wind = getWind(bird_data_$x[i], bird_data_$y[i], w = wind_data_[wind_data_$datetime_ == bird_data_$wind_time[i]], PROJ = proj.latlon)
   u_wind = append(u_wind, uv_wind[1])
   v_wind = append(v_wind, uv_wind[2])
