@@ -10,7 +10,7 @@ sapply(c( 'raster','stringr', 'data.table', 'magrittr', 'sf', "rnaturalearthdata
 proj.latlon <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" #classic longlat projection to use the windR function
 
 path_bird= "data/Kittiwake_data_treated"
-path_wind = "data/ASCAT"
+path_wind = "data/ERA-Interrim"
 
 cosd <-function(x) cos(x*pi/180) #cos of an angle in degrees 
 sind <-function(x) sin(x*pi/180) 
@@ -45,7 +45,7 @@ bird_data[, timestamp := as.POSIXct(bird_data$timestamp)]
 bird_data_ = bird_data#[as.logical(str_count(bird_data$timestamp, pattern = month))] #reduction of the dataset to the month and segment studied
 setnames(bird_data_, c("lon","lat"),c("x", "y"))
 
-windRDS = list.files(path=path_wind, pattern= 'ASCAT_daily_09_2016_to_12_2016.RDS')
+windRDS = list.files(path=path_wind, pattern= 'ERA_Interim_daily_sfc_09_2016_to_12_2016.RDS')
 wind_data = readRDS(paste0(path_wind,"/", windRDS)) %>% as.data.table
 wind_data_ = wind_data#[as.logical(str_count(wind_data$datetime_, pattern = month))]  #reduction of the dataset to the month and segment studied
 

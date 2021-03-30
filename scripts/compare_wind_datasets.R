@@ -51,6 +51,6 @@ ggplot(wind_sfc)+geom_histogram(aes(x=ddir)) #direction
 summary(wind_sfc$ddir)
 t.test(wind_sfc$ddir, mu = 0)
 
-gplot(wind_sfc)+geom_histogram(aes(x=dspeed)) #speed
+ggplot(wind_sfc)+geom_histogram(aes(x=dspeed)) #speed
 summary(wind_sfc$dspeed)
 t.test(wind_sfc$dspeed, mu = 0)
