@@ -189,6 +189,9 @@ ggplot(data = bird_data_)+ #Air speed as a function of wind support
   
 ```
 
+The graph air speed as a function of wind support is difficult to interprate because when we look at the definition of air speed, we have $a_{speed}^2 = g_{speed}^2+w_{speed}^2 - 2\times \times ws$. It means that if we suppose $g_{speed}$ and $w_{speed}$ to be independant, we expect $a_{speed}$ to naturally decrease with wind support. On the other hand the second graph is interesting, because it shows that g_{speed} and wind support are not independant. When we use a linear model to describe $g_{speed} = f(ws)$ for the migratory segment it shows that the relation is not 0 (p-vaule<10^{-9}) the coefficient is $\simeq 0.14$ (when wind support inceases by $1 m.s^{-1}$, $g_{speed}$ increases by $0.14 m.s^{-1}$).
+
+The fact that the coefficient $\neq 1$ is interesting. It can be interpreted in several way : crosswind, $a_{speed}$ decreases  with ws, ...
 
 ```{r, echo = FALSE, warning = FALSE, message = FALSE}
 ###monthly analysis
