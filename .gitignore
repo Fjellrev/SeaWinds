@@ -13,3 +13,6 @@ data/
 .txt
 .tex
 Plots
+.html
+.pdf
+.RDataTmp
