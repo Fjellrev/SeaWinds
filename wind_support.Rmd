@@ -1,0 +1,145 @@
+---
+title: "Wind support"
+author: "Simon Lacombe"
+date: "25/03/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+
+```{r setup, include=FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = FALSE, results = "hide"}
+sapply(c( 'raster','stringr', 'data.table', 'magrittr', 'sf', "rnaturalearthdata","rnaturalearth", 'windR', 'geosphere', 'ggplot2','ncdf4'),
+       function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
+month <- "2016-11"
+
+bird_data <- readRDS("outputs/daily_tracks_analysed.rds") %>% as.data.table
+bird_data_ <- bird_data[as.logical(str_count(bird_data$timestamp, pattern = month))&migr10==1] #we focus on the migratory segments in the selected month
+bird_data_ <- bird_data_[bird_data_$std_conductivity < 0.9] #we remove the points birds fly less than 10% of the time
+cosd <-function(x) cos(x*pi/180) 
+sind <-function(x) sin(x*pi/180)
+```
+
+# **Where and when do bird fly with the wind ? Data from 10-2016 **
+## 1. When bird fly with the wind, they fly faster
+```{r, echo = FALSE, warnings = FALSE}
+ggplot(bird_data_)+geom_point(aes(x=ws, y=gspeed))+geom_smooth(aes(x=ws,y=gspeed), method = lm)
+reg <- lm(bird_data_$gspeed ~ bird_data_$ws)
+summary(reg)
+```
+
+## 2. Where is wind support higher ?
+
+**Maps showing the birds' direction with wind direction + maps of the birds trajectory**
+
+```{r, echo = FALSE, warning = FALSE}
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+a <- 0.1
+b <- 0.05
+col <- unique(bird_data_$colony)[1]
+ggplot(data=bird_data_[colony==col]) + 
+  geom_segment(aes(x = x, y = y, xend = x+a*gspeed*sind(gdir), yend = y+a*gspeed*cosd(gdir)), color = 'red', size = 1, arrow = arrow(length = unit(.05, "cm"))) + #Ground 
+  geom_segment(aes(x = x, y = y, xend = x+a*wspeed*sind(wdir), yend = y+a*wspeed*cosd(wdir)), color = 'blue', size = 1, arrow = arrow(length = unit(.05, "cm"))) + #Wind 
+  geom_sf(data=world ,fill = "black", color = "black") + 
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)+
+  ggtitle(paste0(col, " red : ground speed, blue : wind speed"))
+
+ggplot(data=bird_data_[colony==col]) + 
+  geom_segment(size = 1, aes(x = x, y = y, xend = x2, yend = y2, color=ws),arrow = arrow(length = unit(.15, "cm"))) +
+  geom_sf(data=world ,fill = "black", color = "black") + 
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE) + scale_color_distiller(palette = "Spectral", direction = -1)
+
+col <- unique(bird_data_$colony)[2]
+ggplot(data=bird_data_[colony==col]) + 
+  geom_segment(aes(x = x, y = y, xend = x+a*gspeed*sind(gdir), yend = y+a*gspeed*cosd(gdir)), color = 'red', size = 1, arrow = arrow(length = unit(.05, "cm"))) + #Ground 
+  geom_segment(aes(x = x, y = y, xend = x+a*wspeed*sind(wdir), yend = y+a*wspeed*cosd(wdir)), color = 'blue', size = 1, arrow = arrow(length = unit(.05, "cm"))) + #Wind 
+  geom_sf(data=world ,fill = "black", color = "black") + 
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)+
+  ggtitle(col)
+ggplot(data=bird_data_[colony==col]) + 
+  geom_segment(size = 1, aes(x = x, y = y, xend = x2, yend = y2, color=ws),arrow = arrow(length = unit(.15, "cm"))) +
+  geom_sf(data=world ,fill = "black", color = "black") + 
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE) + scale_color_distiller(palette = "Spectral", direction = -1)
+
+
+col <- unique(bird_data_$colony)[3]
+ggplot(data=bird_data_[colony==col]) + 
+  geom_segment(aes(x = x, y = y, xend = x+a*gspeed*sind(gdir), yend = y+a*gspeed*cosd(gdir)), color = 'red', size = 1, arrow = arrow(length = unit(.05, "cm"))) + #Ground 
+  geom_segment(aes(x = x, y = y, xend = x+a*wspeed*sind(wdir), yend = y+a*wspeed*cosd(wdir)), color = 'blue', size = 1, arrow = arrow(length = unit(.05, "cm"))) + #Wind 
+  geom_sf(data=world ,fill = "black", color = "black") + 
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)+
+  ggtitle(col)
+ggplot(data=bird_data_[colony==col]) + 
+  geom_segment(size = 1, aes(x = x, y = y, xend = x2, yend = y2, color=ws),arrow = arrow(length = unit(.15, "cm"))) +
+  geom_sf(data=world ,fill = "black", color = "black") + 
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE) + scale_color_distiller(palette = "Spectral", direction = -1)
+
+
+col <- unique(bird_data_$colony)[4]
+ggplot(data=bird_data_[colony==col]) + 
+  geom_segment(aes(x = x, y = y, xend = x+a*gspeed*sind(gdir), yend = y+a*gspeed*cosd(gdir)), color = 'red', size = 1, arrow = arrow(length = unit(.05, "cm"))) + #Ground 
+  geom_segment(aes(x = x, y = y, xend = x+a*wspeed*sind(wdir), yend = y+a*wspeed*cosd(wdir)), color = 'blue', size = 1, arrow = arrow(length = unit(.05, "cm"))) + #Wind 
+  geom_sf(data=world ,fill = "black", color = "black") + 
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)+
+  ggtitle(col)
+ggplot(data=bird_data_[colony==col]) + 
+  geom_segment(size = 1, aes(x = x, y = y, xend = x2, yend = y2, color=ws),arrow = arrow(length = unit(.15, "cm"))) +
+  geom_sf(data=world ,fill = "black", color = "black") + 
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE) + scale_color_distiller(palette = "Spectral", direction = -1)
+
+
+col <- unique(bird_data_$colony)[5]
+ggplot(data=bird_data_[colony==col]) + 
+  geom_segment(aes(x = x, y = y, xend = x+a*gspeed*sind(gdir), yend = y+a*gspeed*cosd(gdir)), color = 'red', size = 1, arrow = arrow(length = unit(.05, "cm"))) + #Ground 
+  geom_segment(aes(x = x, y = y, xend = x+a*wspeed*sind(wdir), yend = y+a*wspeed*cosd(wdir)), color = 'blue', size = 1, arrow = arrow(length = unit(.05, "cm"))) + #Wind 
+  geom_sf(data=world ,fill = "black", color = "black") + 
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)+
+  ggtitle(col)
+ggplot(data=bird_data_[colony==col]) + 
+  geom_segment(size = 1, aes(x = x, y = y, xend = x2, yend = y2, color=ws),arrow = arrow(length = unit(.15, "cm"))) +
+  geom_sf(data=world ,fill = "black", color = "black") + 
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE) + scale_color_distiller(palette = "Spectral", direction = -1)
+
+
+```
+
+**Raster of wind support and cross wind**
+
+```{r, echo = FALSE, warning = FALSE}
+r <- raster(xmn=(min(bird_data_$x)-1), ymn=(min(bird_data_$y)-1), xmx=(max(bird_data_$x)+1), ymx=(max(bird_data_$y)+1), res=2)
+ws <- rasterize(bird_data_[,c("x","y")], r, field = bird_data_$ws, fun = mean) %>% as.data.frame(xy=T)
+setnames(ws,"layer","mean_ws")
+ggplot(ws)+geom_raster(aes(x=x,y=y,fill=mean_ws))+geom_sf(data=world ,fill = "black", color = "black") + 
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)+ scale_fill_distiller(palette = "Spectral", direction = -1) + ggtitle("raster of the wind support")
+
+ws_pos <- ws
+ws_pos$mean_ws[ws_pos$mean_ws <=0] <- NA
+ggplot(ws_pos)+geom_raster(aes(x=x,y=y,fill=mean_ws))+geom_sf(data=world ,fill = "black", color = "black") + 
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)+ scale_fill_distiller(palette = "Spectral", direction = -1) + ggtitle("positive wind support")
+
+ws_neg <- ws
+ws_neg$mean_ws[ws_neg$mean_ws >=0] <- NA
+ggplot(ws_neg)+geom_raster(aes(x=x,y=y,fill=mean_ws))+geom_sf(data=world ,fill = "black", color = "black") + 
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)+ scale_fill_distiller(palette = "Spectral", direction = -1) + ggtitle("negative wind support")
+```
+
+```{r, echo = FALSE, warning = FALSE}
+r <- raster(xmn=(min(bird_data_$x)-1), ymn=(min(bird_data_$y)-1), xmx=(max(bird_data_$x)+1), ymx=(max(bird_data_$y)+1), res=2)
+cw <- rasterize(bird_data_[,c("x","y")], r, field = abs(bird_data_$cw), fun = mean) %>% as.data.frame(xy=T)
+setnames(cw,"layer","mean_cw")
+ggplot(cw)+geom_raster(aes(x=x,y=y,fill=mean_cw))+geom_sf(data=world ,fill = "black", color = "black") + 
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)+ scale_fill_distiller(palette = "Spectral", direction = -1) + ggtitle("raster of the cross wind")
+
+```
+
+
