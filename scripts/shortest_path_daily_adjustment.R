@@ -4,18 +4,18 @@
 ##
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-sapply(c('raster','fields','lubridate', 'shape', 'data.table', 'magrittr', "maptools", 'rWind','rworldmap', 'gdistance'),
+sapply(c('raster','fields','lubridate', 'shape', 'data.table', 'magrittr', "maptools", 'rWind','rworldmap', 'gdistance', 'ggplot2'),
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 
-date_departure <- as.POSIXct("2016-11-09") #Date of the start of the migration
-daily_speed <- 300000 #number of metters travelled a day 
+date_departure <- as.POSIXct("2016-10-06") #Date of the start of the migration
+daily_speed <- 200000 #number of metters travelled a day 
 #coord of the colony
-col_x <- 18
-col_y <- 82
+col_x <- 8
+col_y <- 78
 
 #coord of the wintering range
-wint_x <- -55
-wint_y <- 60
+wint_x <- -46
+wint_y <- 54
 
 ###Get wind data ---
 wind_path <- "data/ERA-Interrim" 
@@ -59,16 +59,17 @@ while(distGeo(pos,c(wint_x,wint_y))>daily_speed)
   coords <- geom(daily_sp)[,c("x","y")]
   daily_sp_df <- data.table(x=coords[,"x"],y=coords[,"y"])
   daily_sp_df[, dist := distGeo(c(x,y),c(daily_sp_df$x[1],daily_sp_df$y[1])), by = 1:nrow(daily_sp_df)]
-  pos <- c(daily_sp_df[daily_sp_df$dist>daily_speed][1]$x,daily_sp_df[daily_sp_df$dist>daily_speed][1]$y)
-  traj <- rbind(traj,data.table(x=pos[1],y=pos[2],timestamp=date))
+  n <- which(daily_sp_df$dist>daily_speed)[1]
+  pos <- c(daily_sp_df$x[n],daily_sp_df$y[n])
+  traj <- rbind(traj,data.table(x=daily_sp_df$x[1:n],y=daily_sp_df$y[1:n],timestamp=rep(date,n)))
   date <- date + days(1)
 }
 
 traj_line <-Line(cbind(traj[,c("x")], traj[,c("y")]))
 
-image.plot(wind_layer$speed, col=terrain.colors(10), zlim=c(0,20))
-points(col_x, col_y, pch=19, cex=1.4,col="red")
-points(wint_x, wint_y, pch=19, cex=1.4,col="blue")
-lines(getMap(resolution="low"), lwd=4)
-lines(traj_line, col="red", lwd=4, lty=1)
-title(paste0("Departure time : ", date_departure))
+ggplot(data=traj) + 
+  geom_line(size = 1, aes(x = x, y = y), color = 'blue') +
+  geom_sf(data=world ,fill = "black", color = "black") + 
+  geom_point(aes(x=col_x, y =col_y), color = 'blue', size = 2.5) +
+  geom_point(aes(x=wint_x, y = wint_y), color = 'red', size = 2.5) +
+  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
