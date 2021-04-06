@@ -4,18 +4,18 @@
 ##
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-sapply(c('raster','fields','lubridate', 'shape', 'data.table', 'magrittr', "maptools", 'rWind','rworldmap', 'gdistance', 'ggplot2'),
+sapply(c('raster','fields','lubridate', 'shape', 'data.table',"rnaturalearthdata","rnaturalearth", 'magrittr', "maptools", 'rWind','rworldmap', 'gdistance','geosphere', 'ggplot2'),
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 
-date_departure <- as.POSIXct("2016-10-06") #Date of the start of the migration
+date_departure <- as.POSIXct("2016-09-05") #Date of the start of the migration
 daily_speed <- 200000 #number of metters travelled a day 
 #coord of the colony
-col_x <- 8
-col_y <- 78
+col_x <- 21
+col_y <- 73
 
 #coord of the wintering range
-wint_x <- -46
-wint_y <- 54
+wint_x <- 60
+wint_y <- 77
 
 ###Get wind data ---
 wind_path <- "data/ERA-Interrim" 
@@ -31,7 +31,7 @@ r_land <- rasterize(wrld_simpl, r, field = 0) #raster with 0 above lands and NA 
 r_df <- r_land %>% as.data.frame(xy=T)
 r_df[is.na(r_df)] <- 1 #turn NA into 1 above the sea
 r_land <- rasterize(r_df[,c("x","y")], r, field = r_df$layer)
-Conductance_land <- transition(r_land,transitionFunction=min, directions = 4) #turn this raster into a transition layer
+Conductance_land <- transition(r_land,transitionFunction=min, directions = 8) #turn this raster into a transition layer
 
 
 ###Main script ---
@@ -46,7 +46,7 @@ while(distGeo(pos,c(wint_x,wint_y))>daily_speed)
   wind_data_[, wdir := atan2(u, v)*180/pi, by = 1:nrow(wind_data_)] #get wind direction
   wind_data_[, wdir := wdir+360*(wdir<0), by = 1:nrow(wind_data_)] #correct wind direction to be between 0 and 360° 
   wind_data_[, wspeed     := sqrt(u^2 + v^2), by = 1:nrow(wind_data_)] #get wind speed
-
+  
   r_wdir <- rasterize(wind_data_[,c("x","y")], r, field=wind_data_$wdir) #raster of wind direction
   r_wspeed <- rasterize(wind_data_[,c("x","y")], r, field=wind_data_$wspeed) #raster of wind speed
   
@@ -59,17 +59,19 @@ while(distGeo(pos,c(wint_x,wint_y))>daily_speed)
   coords <- geom(daily_sp)[,c("x","y")]
   daily_sp_df <- data.table(x=coords[,"x"],y=coords[,"y"])
   daily_sp_df[, dist := distGeo(c(x,y),c(daily_sp_df$x[1],daily_sp_df$y[1])), by = 1:nrow(daily_sp_df)]
-  n <- which(daily_sp_df$dist>daily_speed)[1]
-  pos <- c(daily_sp_df$x[n],daily_sp_df$y[n])
-  traj <- rbind(traj,data.table(x=daily_sp_df$x[1:n],y=daily_sp_df$y[1:n],timestamp=rep(date,n)))
+  daily_sp_df[, dist_arival := distGeo(c(wint_x,wint_y),c(x,y)), by = 1:nrow(daily_sp_df)]
+  n <- which(daily_sp_df$dist>daily_speed|daily_sp_df$dist_arival<daily_speed)[1]
+  pos <- c(daily_sp_df$x[n],daily_sp_df$y[n][1])
+  traj <- rbind(traj,data.table(x=pos[1],y=pos[2],timestamp=date))
   date <- date + days(1)
 }
 
-traj_line <-Line(cbind(traj[,c("x")], traj[,c("y")]))
+world <- ne_countries(scale = "medium", returnclass = "sf")
 
 ggplot(data=traj) + 
-  geom_line(size = 1, aes(x = x, y = y), color = 'blue') +
+  geom_path(size = 1, aes(x = x, y = y), color = 'blue') +
   geom_sf(data=world ,fill = "black", color = "black") + 
   geom_point(aes(x=col_x, y =col_y), color = 'blue', size = 2.5) +
   geom_point(aes(x=wint_x, y = wint_y), color = 'red', size = 2.5) +
-  coord_sf(xlim = c(min(bird_data_$x)-1, max(bird_data_$x)+1), ylim = c(min(bird_data_$y)-1, max(bird_data_$y)+1), expand = FALSE)
+  coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)
+ 

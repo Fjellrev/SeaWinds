@@ -7,15 +7,15 @@
 sapply(c('raster','fields','lubridate', 'shape', 'data.table', 'magrittr', "maptools", 'rWind','rworldmap', 'gdistance'),
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 
-date <- "2016-11-11" #Date of the wind layer used
+date <- "2016-10-24" #Date of the wind layer used
 
 #coord of the colony
-col_x <- 18
-col_y <- 82
+col_x <- 8
+col_y <- 68
 
 #coord of the wintering range
-wint_x <- -55
-wint_y <- 60
+wint_x <- -37
+wint_y <- 52
 
 ###Get wind data ---
 
@@ -46,19 +46,20 @@ r_land <- rasterize(wrld_simpl, r, field = 0) #raster with 0 above lands and NA 
 r_df <- r_land %>% as.data.frame(xy=T)
 r_df[is.na(r_df)] <- 1 #turn NA into 1 above the sea
 r_land <- rasterize(r_df[,c("x","y")], r, field = r_df$layer)
-Conductance_land <- transition(r_land,transitionFunction=min, directions = 4) #turn this raster into a transition layer
+Conductance_land <- transition(r_land,transitionFunction=min, directions = 8) #turn this raster into a transition layer
 
 ###Get the shortest path with rWind ---
 
 Conductance <- flow.dispersion(x=wind_layer, output="transitionLayer")
 Conductance <- Conductance*Conductance_land
-to_wintering_range <- shortestPath(Conductance,c(col_x, col_y), c(wint_x, wint_y),output="SpatialLines")
-to_colony <- shortestPath(Conductance,c(wint_x, wint_y), c(col_x, col_y), output="SpatialLines")
+to_wintering_range <- shortestPath(Conductance,c(col_x,col_y), c(wint_x, wint_y),output="SpatialLines")
+to_colony <- shortestPath(Conductance,c(wint_x, wint_y),c(col_x,col_y), output="SpatialLines")
 
-image.plot(wind_layer$speed, col=terrain.colors(10), zlim=c(0,20))
+image.plot(wind_layer$speed, col=terrain.colors(10), zlim=c(0,0.1))
 points(col_x, col_y, pch=19, cex=1.4,col="red")
 points(wint_x, wint_y, pch=19, cex=1.4,col="blue")
 lines(to_wintering_range, col="red", lwd=4, lty=2)
 lines(to_colony, col="blue", lwd=4, lty=2)
 lines(getMap(resolution="low"), lwd=4)
+
 
