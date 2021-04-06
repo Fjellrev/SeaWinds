@@ -13,11 +13,6 @@ v <- brick(paste0(dirWind, netcdf_), varname = "v10")
 dd <- data.table(rastNam = names(u))
 dd[, datetime_ := substring(rastNam, 2, 11) %>% as.POSIXct(., format = '%Y.%m.%d') ]
 
-write.table(dd, paste0(dirWind, 'ASCAT_names.txt'), sep = ';', row.names = FALSE)
-
-writeRaster(u, filename = paste0(dirWind, 'ASCAT_daily_wind_09_12_2016_u_wind.tif'), overwrite=TRUE)
-writeRaster(v, filename = paste0(dirWind, 'ASCAT_daily_wind_09_12_2016_v_wind.tif'), overwrite=TRUE)
-
 names(u) <- dd$rastNam
 names(v) <- dd$rastNam
 
