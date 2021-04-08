@@ -51,7 +51,9 @@ Conductance_land <- transition(r_land,transitionFunction=min, directions = 8) #t
 ###Get the shortest path with rWind ---
 
 Conductance <- flow.dispersion(x=wind_layer, output="transitionLayer")
+Conductance <- geoCorrection(Conductance, type="r") 
 Conductance <- Conductance*Conductance_land
+
 to_wintering_range <- shortestPath(Conductance,c(col_x,col_y), c(wint_x, wint_y),output="SpatialLines")
 to_colony <- shortestPath(Conductance,c(wint_x, wint_y),c(col_x,col_y), output="SpatialLines")
 

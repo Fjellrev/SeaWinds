@@ -7,15 +7,15 @@
 sapply(c('raster','fields','lubridate', 'shape', 'data.table',"rnaturalearthdata","rnaturalearth", 'magrittr', "maptools", 'rWind','rworldmap', 'gdistance','geosphere', 'ggplot2'),
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 
-date_departure <- as.POSIXct("2016-09-05") #Date of the start of the migration
+date_departure <- as.POSIXct("2016-10-17") #Date of the start of the migration
 daily_speed <- 200000 #number of metters travelled a day 
 #coord of the colony
 col_x <- 21
 col_y <- 73
 
 #coord of the wintering range
-wint_x <- 60
-wint_y <- 77
+wint_x <- -55
+wint_y <- 60
 
 ###Get wind data ---
 wind_path <- "data/ERA-Interrim" 
