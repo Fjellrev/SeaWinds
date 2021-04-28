@@ -28,10 +28,6 @@ bird_data_ <- bird_data_[bird_data_$migr10==1]
 
 ###PREPARE DATASET ----
 
-bird_data_[, timestamp2 := data.table::shift(timestamp, type = 'lead'), by = ring]
-bird_data_[, x2 := data.table::shift(x, type = 'lead'), by = ring]
-bird_data_[, y2 := data.table::shift(y, type = 'lead'), by = ring]
-
 rm <- c() #tracks to be removed
 for (id in unique(bird_data_$ring))
 {
@@ -46,3 +42,4 @@ for (id in unique(bird_data_$ring))
 
 bird_data_ <- bird_data_[not(bird_data_$ring%in%rm)]
 
+saveRDS(bird_data_,"data/Kittiwake_data_treated/BLKI_Alkefjellet_May_tracks.rds")
