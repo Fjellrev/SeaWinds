@@ -8,6 +8,7 @@ sapply(c('sf','spData','tidyverse', 'data.table', 'magrittr', 'gdistance','geosp
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 
 data("world")
+wrld <- st_transform(world,CRS(proj.aeqd))
 
 path_bird <- "data/Kittiwake_data_treated"
 
@@ -31,21 +32,21 @@ bird_data.proj <- as.data.table(bird_data.sp)
 bird_data.proj <- bird_data.proj[,-c("geometry")]
 bird_data.proj[,x := unlist(map(bird_data.sp$geometry,1))]
 bird_data.proj[,y := unlist(map(bird_data.sp$geometry,2))]
+
 ###Functions ---
 
 is.land <- function(x,y) #return TRUE if a point is over lands
 {
   pt <- expand.grid(x, y)
   pt <- st_as_sf(pt, coords=1:2, crs=CRS(proj.aeqd))
-  pt <- st_transform(pt,CRS(proj.latlon))
-  !is.na(as.numeric(suppressMessages(st_intersects(pt, world))))
+  !is.na(as.numeric(suppressMessages(st_intersects(pt, wrld))))
 }
 
 ###VAR --- 
 
 #parameters of the simulation
-n <- 5 #number of iterations to produce a track --> track with 2^n segments
-N <- 5 #number of tracks created
+n <- 3 #number of iterations to produce a track --> track with 2^n segments
+N <- 100 #number of tracks created
 
 ###Main script ---
 id <- unique(bird_data.proj$ring)[30] #temporary : we focus on one individual for now
@@ -99,7 +100,7 @@ for (k in seq (1:N))
   traj <- rbind(traj,traj_k)
 }
 
-#traj <- traj[not(traj$track_type%in%rm)]#remove tracks that go above the land
+traj <- traj[not(traj$track_type%in%rm)]#remove tracks that go above the land
 
 #into geographic coord
 
