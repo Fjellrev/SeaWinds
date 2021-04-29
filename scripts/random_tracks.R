@@ -4,7 +4,7 @@
 ##
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-sapply(c('sp','spData','raster','fields','lubridate', 'shape', 'data.table',"rnaturalearthdata","rnaturalearth", 'magrittr', "maptools", 'rWind','rworldmap', 'gdistance','geosphere', 'ggplot2'),
+sapply(c('sf','spData','tidyverse', 'data.table', 'magrittr', 'gdistance','geosphere', 'ggplot2'),
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 
 data("world")
@@ -25,22 +25,19 @@ medlon <- median(bird_data$x, na.rm = T)
 medlat <- median(bird_data$y, na.rm = T)
 proj.aeqd <- paste("+proj=aeqd +lat_0=",round(medlat), " +lon_0=",round(medlon)," +units=m ", sep="")
 
-bird_data.sp <- bird_data #bird data in aeqs projection
-coordinates(bird_data.sp) <- ~ x + y
-proj4string(bird_data.sp) <- CRS(proj.latlon)
-
-bird_data.sp <- spTransform(bird_data.sp, CRS(proj.aeqd))
+bird_data.sp <- st_as_sf(bird_data, coords=4:5, crs=CRS(proj.latlon))
+bird_data.sp <- st_transform(bird_data.sp, CRS(proj.aeqd))
 bird_data.proj <- as.data.table(bird_data.sp) 
-
+bird_data.proj <- bird_data.proj[,-c("geometry")]
+bird_data.proj[,x := unlist(map(bird_data.sp$geometry,1))]
+bird_data.proj[,y := unlist(map(bird_data.sp$geometry,2))]
 ###Functions ---
 
 is.land <- function(x,y) #return TRUE if a point is over lands
 {
   pt <- expand.grid(x, y)
-  coordinates(pt) <- ~Var1 + Var2
-  proj4string(pt) <- CRS(proj.aeqd)
-  pt <- spTransform(pt, CRS(proj.latlon))
-  pt <- st_as_sf(pt)
+  pt <- st_as_sf(pt, coords=1:2, crs=CRS(proj.aeqd))
+  pt <- st_transform(pt,CRS(proj.latlon))
   !is.na(as.numeric(suppressMessages(st_intersects(pt, world))))
 }
 
@@ -102,16 +99,16 @@ for (k in seq (1:N))
   traj <- rbind(traj,traj_k)
 }
 
-traj <- traj[not(traj$track_type%in%rm)]#remove tracks that go above the land
+#traj <- traj[not(traj$track_type%in%rm)]#remove tracks that go above the land
 
 #into geographic coord
 
-
-coordinates(traj) <- ~ x + y
-proj4string(traj) <- CRS(proj.aeqd) # gives the CRS of the data
-
-traj <- spTransform(traj, CRS(proj.latlon)) # projects the data
-traj <- as.data.table(traj) # back to a dataframe
+traj.sp <- st_as_sf(traj, coords=3:4, crs=CRS(proj.aeqd))
+traj.sp <- st_transform(traj.sp, CRS(proj.latlon))
+traj <- as.data.table(traj.sp) 
+traj <- traj[,-c("geometry")]
+traj[,x := unlist(map(traj.sp$geometry,1))]
+traj[,y := unlist(map(traj.sp$geometry,2))]
 
 #last traj = great circle line
 start_pt_latlon <- traj[traj$ring==id&traj$track_type=="observed"][1]
@@ -133,7 +130,7 @@ plot_ <- ggplot(data=traj[track_type!="observed"]) +
   geom_point(aes(x=start_pt$x, y =start_pt$y), color = 'blue', size = 2.5) +
   geom_point(aes(x=end_pt$x, y =end_pt$y), color = 'red', size = 2.5) +
   coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)+
-  ggtitle(paste0("n = ",n, " ; a = ",a))
+  ggtitle(paste0("n = ",n, " ; ring = ",id))
 print(plot_)
 
 #saveRDS(traj, file = "outputs/random_tracks.rds")
