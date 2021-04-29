@@ -7,6 +7,12 @@
 sapply(c('sf','spData','tidyverse', 'data.table', 'magrittr', 'gdistance','geosphere', 'ggplot2'),
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 
+source("functions/FUNCTION_OverlapPoly.r")
+
+###Projections --- 
+proj.aeqd <- paste("+proj=aeqd +lat_0=",round(medlat), " +lon_0=",round(medlon)," +units=m ", sep="")
+proj.latlon <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" #classic longlat projection to use the windR function
+
 data("world")
 wrld <- st_transform(world,CRS(proj.aeqd))
 
@@ -18,13 +24,9 @@ path_bird <- "data/Kittiwake_data_treated"
 birdRDS <- list.files(path=path_bird, pattern = "tracks")
 bird_data <- readRDS(paste0(path_bird,'/', birdRDS)) %>% as.data.table
 
-###Projections --- 
-
-proj.latlon <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" #classic longlat projection to use the windR function
 
 medlon <- median(bird_data$x, na.rm = T)
 medlat <- median(bird_data$y, na.rm = T)
-proj.aeqd <- paste("+proj=aeqd +lat_0=",round(medlat), " +lon_0=",round(medlon)," +units=m ", sep="")
 
 bird_data.sp <- st_as_sf(bird_data, coords=4:5, crs=CRS(proj.latlon))
 bird_data.sp <- st_transform(bird_data.sp, CRS(proj.aeqd))
@@ -33,14 +35,6 @@ bird_data.proj <- bird_data.proj[,-c("geometry")]
 bird_data.proj[,x := unlist(map(bird_data.sp$geometry,1))]
 bird_data.proj[,y := unlist(map(bird_data.sp$geometry,2))]
 
-###Functions ---
-
-is.land <- function(x,y) #return TRUE if a point is over lands
-{
-  pt <- expand.grid(x, y)
-  pt <- st_as_sf(pt, coords=1:2, crs=CRS(proj.aeqd))
-  !is.na(as.numeric(suppressMessages(st_intersects(pt, wrld))))
-}
 
 ###VAR --- 
 
@@ -64,43 +58,59 @@ traj <- rbind(traj,traj_0)
 #N random tracks
 rm <- c()
 a <- sqrt((start_pt$x-end_pt$x)^2+(start_pt$y-end_pt$y)^2)/2 #magnitude of the deviation
-for (k in seq (1:N))
+n.pts <- 50 # number of random points generated during computation of new location
+
+for (k in 1:N)
 {
-  cat(k)
+  cat(k, "\n")
   traj_x <- c(start_pt$x,end_pt$x) #x coords of the track
   traj_y <- c(start_pt$y,end_pt$y)
   
-  for (j in seq(1:n)) 
+  for (j in 1:n) 
   {
+    cat("j = ", j)
+    
     traj_x_ <- c(traj_x[1]) #new x coords 
     traj_y_ <- c(traj_y[1])
-    for (i in seq(1:(length(traj_x)-1))) #create a new point betwen point i and i+1 
+    
+    for (i in 1:(length(traj_x)-1)) #create a new point betwen point i and i+1 
     {
+      
+      cat("i = ", i, "\n")
+      
       v <- c(traj_x[i+1]-traj_x[i], traj_y[i+1]-traj_y[i]) 
       vn <- c(-v[2], v[1])/sqrt(v[1]^2+v[2]^2) #orthogonal vector to the segment treated 
-      r <- runif(1,-1,1)
-      xi <- (traj_x[i]+traj_x[i+1])/2+a/(2^(j-1))*r*vn[1] #coords of the new point
+      r <- runif(n.pts,-1,1)
+      xi <- (traj_x[i]+traj_x[i+1])/2+a/(2^(j-1))*r*vn[1] #coords of the new points
       yi <- (traj_y[i]+traj_y[i+1])/2+a/(2^(j-1))*r*vn[2]
-      nland=0 #number of times the point has been created above the lands (in case there is no choice)
-      while(is.land(xi,yi)&nland<10)#is it above the lands
+      # nland=0 #number of times the point has been created above the lands (in case there is no choice)
+      
+      land_out <- is.land(x = xi, y = yi, prj = proj.aeqd, mask = wrld)
+      
+      while(length(which(land_out == FALSE)) < 5) # check that enough points are generated above ocean
       {
-        nland=nland+1
-        r <- runif(1,-1,1)
+        r <- runif(n.pts,-1,1)
         xi <- (traj_x[i]+traj_x[i+1])/2+a/(2^(j-1))*r*vn[1]
         yi <- (traj_y[i]+traj_y[i+1])/2+a/(2^(j-1))*r*vn[2]
-        if (nland == 10){rm <- append(rm, paste0("sim-",k))}
+        land_out <- is.land(x = xi, y = yi, prj = proj.aeqd, mask = wrld)
+        # if (nland == 10){rm <- append(rm, paste0("sim-",k))}
       }
+      
+      xi <- sample(xi[which(land_out == FALSE)], 1)
+      yi <- sample(yi[which(land_out == FALSE)], 1)
+      
       traj_x_ <- append(traj_x_, c(xi,traj_x[i+1]))
       traj_y_ <- append(traj_y_, c(yi,traj_y[i+1]))
     }
     traj_x <- traj_x_
     traj_y <- traj_y_
   }
+  
   traj_k <- data.table(ring=rep(id,length(traj_x)),track_type = rep(paste0("sim-", k),length(traj_x)), x = traj_x, y = traj_y)
   traj <- rbind(traj,traj_k)
 }
 
-traj <- traj[not(traj$track_type%in%rm)]#remove tracks that go above the land
+# traj <- traj[not(traj$track_type%in%rm)]#remove tracks that go above the land
 
 #into geographic coord
 
@@ -135,3 +145,10 @@ plot_ <- ggplot(data=traj[track_type!="observed"]) +
 print(plot_)
 
 #saveRDS(traj, file = "outputs/random_tracks.rds")
+
+test.map <- function(xi, yi){
+ggplot() +  geom_sf(data=wrld, fill = "black", color = "black") + 
+  geom_point(aes(x=start_pt$x, y =start_pt$y), color = 'blue', size = 2.5) + 
+  geom_point(data = end_pt, aes(x, y), colour = 'red', size = 2.5) + 
+  geom_point(aes(x=xi, y =yi), color = 'green', size = 2.5)
+}
