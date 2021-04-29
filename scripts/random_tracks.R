@@ -72,7 +72,7 @@ n <- 5 #number of iterations to produce a track --> track with 2^n segments
 N <- 50 #number of tracks created
 
 ###Main script ---
-id <- unique(bird_data.proj$ring)[25] #temporary : will be changed into : for (id in unique(bird_data.proj$ring))
+id <- unique(bird_data.proj$ring)[17] #temporary : will be changed into : for (id in unique(bird_data.proj$ring))
 traj <- data.table(ring = c(), N=c(), track_type = c(), x = c(), y = c())
 
 #first trajectory = observed track
@@ -179,7 +179,7 @@ traj[, v_wind := as.numeric(v_wind)]
 traj[, wdir := atan2(u_wind, v_wind)*180/pi, by = 1:nrow(traj)] #wind direction
 traj[, wspeed     := sqrt(u_wind^2 + v_wind^2), by = 1:nrow(traj)] #wind speed
 traj[, ws := wspeed*cosd(wdir -gdir)] #wind support
-traj[, ws_tot := mean(traj$ws[traj$N==N], na.rm= T), by = 1:nrow(traj)]
+traj[, mean_ws := mean(traj$ws[traj$N==N], na.rm= T), by = 1:nrow(traj)]
 #3. cost
 cost <- c()
 for (i in 1:nrow(traj))
@@ -192,16 +192,17 @@ for (i in 1:nrow(traj))
 }
 traj$cost <- cost
 traj[, cost_tot := sum(traj$cost[traj$N==N], na.rm= T), by = 1:nrow(traj)]
-cost_opt <- sort(traj$cost_tot)[10/100*nrow(traj)] 
-
-###cost color scale based on Krietsch & al. 2020 ---
-
-col_ws = c('firebrick4', 'firebrick3', 'gold', 'gold', 'springgreen3', 'springgreen4')
+opt_cost <- sort(unique(traj$cost_tot))[floor(5/100*length(unique(traj$N)))]
+  
+#saveRDS(traj, file = paste0("outputs/observed_sim_gc_tracks/tracks_",id,".rds")
 
 
 ###Display --- 
+
+col_ws = c('firebrick4', 'firebrick3', 'gold', 'gold', 'springgreen3', 'springgreen4')
+
 plot_ <- ggplot(data=traj[track_type!="observed"]) + 
-  geom_segment(size = .75, aes(x = x, y = y,xend=x2,yend=y2,color=ws_tot)) +
+  geom_segment(size = .75, aes(x = x, y = y,xend=x2,yend=y2,color=mean_ws)) +
   scale_colour_gradientn(colours = col_ws)+
   geom_segment(data = traj[track_type=="observed"], size = 1.25, aes(x = x, y = y,xend=x2,yend=y2),color='black') +
   geom_sf(data=world,fill = "black", color = "black") + 
@@ -211,4 +212,5 @@ plot_ <- ggplot(data=traj[track_type!="observed"]) +
   ggtitle(paste0("n = ",n, " ; ring = ",id))
 print(plot_)
 
-#saveRDS(traj, file = "outputs/random_tracks.rds")
+
+
