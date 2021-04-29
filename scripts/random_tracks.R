@@ -212,5 +212,17 @@ plot_ <- ggplot(data=traj[track_type!="observed"]) +
   ggtitle(paste0("n = ",n, " ; ring = ",id))
 print(plot_)
 
+r <- raster(xmn=-70.25, xmx=70.25, ymn=29.75, ymx=85.25, res=1) #Empty raster of the studied area
+
+r.ws <- rasterize(traj[track_type!="observed"][,c("x","y")],r,field=traj[track_type!="observed"]$mean_ws,fun=mean)%>%as.data.frame(xy=T)
+plot_ <- ggplot(data=r.ws) + 
+  geom_raster(aes(x = x, y = y,fill=layer)) +
+  scale_fill_gradientn(colours = col_ws, name="WS" )+
+  geom_segment(data = traj[track_type=="observed"], size = 1.25, aes(x = x, y = y,xend=x2,yend=y2),color='black') +
+  geom_segment(data = traj[track_type=="gc"], size = 1.25, aes(x = x, y = y,xend=x2,yend=y2),color='black') +
+  geom_sf(data=world,fill = "black", color = "black") + 
+  coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)+
+  ggtitle(paste0("n = ",n, " ; ring = ",id))
+print(plot_)
 
 
