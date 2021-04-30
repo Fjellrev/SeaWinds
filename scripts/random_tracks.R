@@ -50,10 +50,10 @@ wind_data[, wspeed     := sqrt(u^2 + v^2), by = 1:nrow(wind_data)] #get wind spe
 
 ###parameters of the simulation ----
 n <- 4 #number of iterations to produce a track --> track with 2^n segments
-N <- 50 #number of tracks created
+N <- 1000 #number of tracks created
 
 ### Main script ----
-for (id in unique(bird_data.proj$ring)[1])
+for (id in unique(bird_data.proj$ring))
 {
   cat(id, "\n")
   traj <- data.table(ring = c(), N = c(), track_type = c(), x = c(), y = c())
@@ -160,8 +160,8 @@ for (id in unique(bird_data.proj$ring)[1])
     u_wind = append(u_wind, uv_wind[1])
     v_wind = append(v_wind, uv_wind[2])
   }
-  traj[,u_wind := u_wind]
-  traj[,v_wind := v_wind]
+  traj[,u_wind := as.numeric(u_wind)]
+  traj[,v_wind := as.numeric(v_wind)]
   
   traj[, wdir := atan2(u_wind, v_wind)*180/pi, by = 1:nrow(traj)] #wind direction
   traj[, wspeed     := sqrt(u_wind^2 + v_wind^2), by = 1:nrow(traj)] #wind speed
