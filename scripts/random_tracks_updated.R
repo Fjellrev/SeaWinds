@@ -13,7 +13,12 @@ source("functions/FUNCTION_OverlapPoly.r")
 source('functions/FUNCTION_QuickMap.r')
 cosd <-function(x) cos(x*pi/180) #cos of an angle in degrees 
 sind <-function(x) sin(x*pi/180) 
-
+       
+### Read BLKI data ----
+bird_data <- readRDS(paste0(bird_path,'/', bird_filename)) %>% as.data.table
+medlon <- median(bird_data$x, na.rm = T)
+medlat <- median(bird_data$y, na.rm = T)
+       
 ### Define projections ---- 
 proj.aeqd <- paste("+proj=aeqd +lat_0=",round(medlat), " +lon_0=",round(medlon)," +units=m ", sep="")
 proj.latlon <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" #classic longlat projection to use the windR function
@@ -22,11 +27,6 @@ data("world")
 wrld <- st_transform(world,CRS(proj.aeqd))
 
 path_bird <- "data/Kittiwake_data_treated"
-
-
-### Read BLKI data ----
-bird_data <- readRDS(paste0(bird_path,'/', bird_filename)) %>% as.data.table
-
 
 ### Read and transform wind data ----
 wind_data <- readRDS(paste0(wind_path,"/", wind_filename))%>% as.data.table
@@ -42,10 +42,6 @@ r_wspeed <- rasterize(wind_data[,c("x","y")], r, field=wind_data$wspeed) #raster
 wind_layer <- stack(r_wdir, r_wspeed) #raster layer
 names(wind_layer) <- c("direction", "speed")
 Conductance <- flow.dispersion(x=wind_layer, output="transitionLayer")
-
-medlon <- median(bird_data$x, na.rm = T)
-medlat <- median(bird_data$y, na.rm = T)
-proj.aeqd <- paste("+proj=aeqd +lat_0=",round(medlat), " +lon_0=",round(medlon)," +units=m ", sep="")
 
 bird_data.sp <- st_as_sf(bird_data, coords=4:5, crs=CRS(proj.latlon))
 bird_data.sp <- st_transform(bird_data.sp, CRS(proj.aeqd))
