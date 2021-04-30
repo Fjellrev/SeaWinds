@@ -54,8 +54,6 @@ bird_data.proj <- bird_data.proj[,-c("geometry")]
 bird_data.proj[,x := unlist(map(bird_data.sp$geometry,1))]
 bird_data.proj[,y := unlist(map(bird_data.sp$geometry,2))]
 
-wrld <- st_transform(world,CRS(proj.aeqd))
-
 
 ### VAR ---- 
 
