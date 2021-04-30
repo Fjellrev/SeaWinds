@@ -18,11 +18,13 @@ sind <-function(x) sin(x*pi/180)
 proj.aeqd <- paste("+proj=aeqd +lat_0=",round(medlat), " +lon_0=",round(medlon)," +units=m ", sep="")
 proj.latlon <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" #classic longlat projection to use the windR function
 
-data("world")
+world_map <- st_as_sf(readRDS("data/World_cr_res-i.rds"), coords=c("lon","lat"), crs = 4326)
 wrld <- st_transform(world,CRS(proj.aeqd))
 
-path_bird <- "data/Kittiwake_data_treated"
-
+bird_path <- "data/Kittiwake_data_treated"
+bird_filename <- "BLKI_Alkefjellet_May_tracks.rds"
+wind_path <- "data/ERA-Interrim/Interanual_means" 
+wind_filename <-  "ERA_Interim_interanual_monthly_mean_sfc_10_2013_to_2018.rds"
 
 ### Read BLKI data ----
 bird_data <- readRDS(paste0(bird_path,'/', bird_filename)) %>% as.data.table
@@ -152,7 +154,7 @@ traj_gc[, x :=geom(gctraj)[,"x"]]
 traj_gc[, y :=geom(gctraj)[,"y"]]
 traj <- rbind(traj,traj_gc)
 
-#Analysis of tracks ---
+### Analysis of tracks ----
 
 traj[, x2 := data.table::shift(x, type = 'lead'), by = N]
 traj[, y2 := data.table::shift(y, type = 'lead'), by = N]
@@ -203,7 +205,7 @@ opt_cost <- sort(unique(traj$cost_tot))[floor(5/100*length(unique(traj$N)))]
 #saveRDS(traj, file = paste0("outputs/observed_sim_gc_tracks/tracks_",id,".rds")
 
 
-###Display --- 
+#### Display ---- 
 
 col_ws = c('firebrick4', 'firebrick3', 'gold', 'gold', 'springgreen3', 'springgreen4')
 
