@@ -26,7 +26,7 @@ map_filename <- "SEAwinds_Worldmap_res-l.rds"
 bird_data <- readRDS(paste0(bird_path,'/', bird_filename)) %>% as.data.table
 medlon <- median(bird_data$x, na.rm = T)
 medlat <- median(bird_data$y, na.rm = T)
-       
+
 ### Define projections ---- 
 proj.aeqd <- paste("+proj=aeqd +lat_0=",round(medlat), " +lon_0=",round(medlon)," +units=m ", sep="")
 proj.latlon <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" #classic longlat projection to use the windR function
@@ -89,7 +89,7 @@ for (k in 1:N)
       xi <- (traj_x[i]+traj_x[i+1])/2+a/(2^(j-1))*r*vn[1] #coords of the new points
       yi <- (traj_y[i]+traj_y[i+1])/2+a/(2^(j-1))*r*vn[2]
       
-
+      
       land_out <- is.land(x = xi, y = yi, prj = proj.aeqd, mask = wrld)
       
       # quick.map(xi[which(land_out == FALSE)], yi[which(land_out == FALSE)]) # just checking where the new locations are
