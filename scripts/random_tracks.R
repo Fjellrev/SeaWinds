@@ -129,7 +129,7 @@ for (id in unique(bird_data.proj$ring))
   
   #remove above land and outside the study area
   rm_2 <- unique(traj$N[traj$x < -70|traj$x>70|traj$y>85|traj$y<30])
-  traj <- traj[not(traj$N%in%append(rm,rm_2))]
+  traj <- traj[not(traj$N%in%rm_2)]
   
   #last traj = great circle line
   start_pt_latlon <- traj[traj$ring==id&traj$track_type=="observed"][1]
