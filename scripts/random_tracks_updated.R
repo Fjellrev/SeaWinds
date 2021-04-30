@@ -9,7 +9,7 @@ sapply(c('sf','spData','tidyverse', 'data.table', 'magrittr', 'gdistance','geosp
 
 source("functions/FUNCTION_OverlapPoly.r")
 
-###Projections --- 
+### Define projections ---- 
 proj.aeqd <- paste("+proj=aeqd +lat_0=",round(medlat), " +lon_0=",round(medlon)," +units=m ", sep="")
 proj.latlon <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" #classic longlat projection to use the windR function
 
@@ -19,7 +19,7 @@ wrld <- st_transform(world,CRS(proj.aeqd))
 path_bird <- "data/Kittiwake_data_treated"
 
 
-###Read BLKI data ---
+### Read BLKI data ----
 
 birdRDS <- list.files(path=path_bird, pattern = "tracks")
 bird_data <- readRDS(paste0(path_bird,'/', birdRDS)) %>% as.data.table
@@ -36,7 +36,7 @@ bird_data.proj[,x := unlist(map(bird_data.sp$geometry,1))]
 bird_data.proj[,y := unlist(map(bird_data.sp$geometry,2))]
 
 
-###VAR --- 
+### VAR ---- 
 
 #parameters of the simulation
 n <- 3 #number of iterations to produce a track --> track with 2^n segments
