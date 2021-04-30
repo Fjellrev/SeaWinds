@@ -160,9 +160,7 @@ for (id in unique(bird_data.proj$ring))
     u_wind = append(u_wind, uv_wind[1])
     v_wind = append(v_wind, uv_wind[2])
   }
-  traj[,u_wind := as.numeric(u_wind)]
-  traj[,v_wind := as.numeric(v_wind)]
-  
+
   traj[, wdir := atan2(u_wind, v_wind)*180/pi, by = 1:nrow(traj)] #wind direction
   traj[, wspeed     := sqrt(u_wind^2 + v_wind^2), by = 1:nrow(traj)] #wind speed
   traj[, ws := wspeed*cosd(wdir -gdir)] #wind support
