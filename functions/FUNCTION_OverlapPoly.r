@@ -10,6 +10,6 @@
 is.land <- function(x, y, prj, mask) #return TRUE if a point is over lands
 {
   pt <- cbind.data.frame(x, y)
-  pt <- st_as_sf(pt, coords=1:2, crs=CRS(proj.aeqd))
-  !is.na(as.numeric(suppressMessages(st_intersects(pt, wrld))))
+  pt <- st_as_sf(pt, coords=1:2, crs=CRS(prj))
+  !is.na(as.numeric(suppressMessages(st_intersects(pt, mask))))
 }
