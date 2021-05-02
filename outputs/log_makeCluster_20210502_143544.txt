@@ -1,0 +1,616 @@
+starting worker pid=44775 on localhost:11366 at 14:35:45.128
+starting worker pid=44795 on localhost:11366 at 14:35:45.138
+starting worker pid=44785 on localhost:11366 at 14:35:45.162
+starting worker pid=44769 on localhost:11366 at 14:35:45.181
+starting worker pid=44789 on localhost:11366 at 14:35:45.183
+starting worker pid=44790 on localhost:11366 at 14:35:45.189
+starting worker pid=44794 on localhost:11366 at 14:35:45.192
+starting worker pid=44791 on localhost:11366 at 14:35:45.192
+starting worker pid=44766 on localhost:11366 at 14:35:45.196
+starting worker pid=44771 on localhost:11366 at 14:35:45.199
+starting worker pid=44805 on localhost:11366 at 14:35:45.212
+starting worker pid=44784 on localhost:11366 at 14:35:45.223
+starting worker pid=44768 on localhost:11366 at 14:35:45.225
+starting worker pid=44787 on localhost:11366 at 14:35:45.228
+starting worker pid=44786 on localhost:11366 at 14:35:45.230
+starting worker pid=44778 on localhost:11366 at 14:35:45.240
+starting worker pid=44777 on localhost:11366 at 14:35:45.242
+starting worker pid=44792 on localhost:11366 at 14:35:45.244
+starting worker pid=44770 on localhost:11366 at 14:35:45.245
+starting worker pid=44773 on localhost:11366 at 14:35:45.253
+starting worker pid=44798 on localhost:11366 at 14:35:45.254
+starting worker pid=44806 on localhost:11366 at 14:35:45.256
+starting worker pid=44779 on localhost:11366 at 14:35:45.260
+starting worker pid=44772 on localhost:11366 at 14:35:45.264
+starting worker pid=44774 on localhost:11366 at 14:35:45.266
+starting worker pid=44782 on localhost:11366 at 14:35:45.269
+starting worker pid=44804 on localhost:11366 at 14:35:45.270
+starting worker pid=44776 on localhost:11366 at 14:35:45.273
+starting worker pid=44801 on localhost:11366 at 14:35:45.275
+starting worker pid=44780 on localhost:11366 at 14:35:45.278
+starting worker pid=44797 on localhost:11366 at 14:35:45.280
+starting worker pid=44783 on localhost:11366 at 14:35:45.285
+starting worker pid=44802 on localhost:11366 at 14:35:45.287
+starting worker pid=44803 on localhost:11366 at 14:35:45.285
+starting worker pid=44788 on localhost:11366 at 14:35:45.290
+starting worker pid=44796 on localhost:11366 at 14:35:45.292
+starting worker pid=44793 on localhost:11366 at 14:35:45.295
+starting worker pid=44807 on localhost:11366 at 14:35:45.297
+starting worker pid=44800 on localhost:11366 at 14:35:45.300
+starting worker pid=44767 on localhost:11366 at 14:35:45.300
+starting worker pid=44808 on localhost:11366 at 14:35:45.301
+starting worker pid=44799 on localhost:11366 at 14:35:45.309
+starting worker pid=44809 on localhost:11366 at 14:35:45.311
+starting worker pid=44781 on localhost:11366 at 14:35:45.329
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+Loading required package: sp
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+rgdal: version: 1.5-18, (SVN revision 1082)
+Geospatial Data Abstraction Library extensions to R successfully loaded
+Loaded GDAL runtime: GDAL 3.0.4, released 2020/01/28
+Path to GDAL shared files: /usr/share/gdal
+GDAL binary built with GEOS: TRUE 
+Loaded PROJ runtime: Rel. 7.0.0, March 1st, 2020, [PJ_VERSION: 700]
+Path to PROJ shared files: /home/NINA.NO/arnaud.tarroux/.local/share/proj:/usr/share/proj
+PROJ CDN enabled: FALSE
+Linking to sp version:1.4-4
+To mute warnings of possible GDAL/OSR exportToProj4() degradation,
+use options("rgdal_show_exportToProj4_warnings"="none") before loading rgdal.
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0
+Linking to GEOS 3.8.0, GDAL 3.0.4, PROJ 7.0.0

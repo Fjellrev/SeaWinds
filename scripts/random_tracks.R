@@ -50,7 +50,7 @@ wind_data[, wspeed     := sqrt(u^2 + v^2), by = 1:nrow(wind_data)] #get wind spe
 
 ###parameters of the simulation ----
 n <- 4 #number of iterations to produce a track --> track with 2^n segments
-N <- 1000 #number of tracks created
+N <- 10000 #number of tracks created
 
 ### Main script ----
 
