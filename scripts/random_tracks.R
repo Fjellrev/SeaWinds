@@ -10,52 +10,51 @@ sapply(c('sf','spData','tidyverse', 'data.table', 'magrittr', 'gdistance','geosp
 
 
 ### utility functions ----
-source("functions/FUNCTION_OverlapPoly.r")
-source('functions/FUNCTION_QuickMap.r')
-cosd <-function(x) cos(x*pi/180) #cos of an angle in degrees 
-sind <-function(x) sin(x*pi/180) 
-
-bird_path <- "data/Kittiwake_data_treated"
-bird_filename <- "BLKI_Alkefjellet_May_tracks.rds"
-wind_path <- "data/ERA_Interim/Interannual_means" 
-wind_filename <-  "ERA_Interim_interannual_monthly_mean_sfc_10_2013_to_2018.rds"
-map_path <- "data/baseline_data"
-map_filename <- "SEAwinds_Worldmap_res-c.rds"
+    source("functions/FUNCTION_OverlapPoly.r")
+    source('functions/FUNCTION_QuickMap.r')
+    cosd <-function(x) cos(x*pi/180) #cos of an angle in degrees 
+    sind <-function(x) sin(x*pi/180) 
+    
+    bird_path <- "data/Kittiwake_data_treated"
+    bird_filename <- "BLKI_Alkefjellet_May_tracks.rds"
+    wind_path <- "data/ERA_Interim/Interannual_means" 
+    wind_filename <-  "ERA_Interim_interannual_monthly_mean_sfc_10_2013_to_2018.rds"
+    map_path <- "data/baseline_data"
+    map_filename <- "SEAwinds_Worldmap_res-c.rds"
 
 ### Read BLKI data ----
-bird_data <- readRDS(paste0(bird_path,'/', bird_filename)) %>% as.data.table
-medlon <- median(bird_data$x, na.rm = T)
-medlat <- median(bird_data$y, na.rm = T)
+    bird_data <- readRDS(paste0(bird_path,'/', bird_filename)) %>% as.data.table
+    medlon <- median(bird_data$x, na.rm = T)
+    medlat <- median(bird_data$y, na.rm = T)
 
 ### Define projections ---- 
-proj.aeqd <- paste("+proj=aeqd +lat_0=",round(medlat), " +lon_0=",round(medlon)," +units=m ", sep="")
-proj.latlon <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" #classic longlat projection to use the windR function
-
-world_map <- st_as_sf(readRDS(paste0(map_path,"/",map_filename)), coords=c("lon","lat"), crs = 4326)
-wrld <- st_transform(world_map,CRS(proj.aeqd))
+    proj.aeqd <- paste("+proj=aeqd +lat_0=",round(medlat), " +lon_0=",round(medlon)," +units=m ", sep="")
+    proj.latlon <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" #classic longlat projection to use the windR function
+    
+    world_map <- st_as_sf(readRDS(paste0(map_path,"/",map_filename)), coords=c("lon","lat"), crs = 4326)
+    wrld <- st_transform(world_map,CRS(proj.aeqd))
 
 ### Transform BLKI data ----
-bird_data.sp <- st_as_sf(bird_data, coords=4:5, crs=CRS(proj.latlon))
-bird_data.sp <- st_transform(bird_data.sp, CRS(proj.aeqd))
-bird_data.proj <- as.data.table(bird_data.sp) 
-bird_data.proj <- bird_data.proj[,-c("geometry")]
-bird_data.proj[,x := unlist(map(bird_data.sp$geometry,1))]
-bird_data.proj[,y := unlist(map(bird_data.sp$geometry,2))]
+    bird_data.sp <- st_as_sf(bird_data, coords=4:5, crs=CRS(proj.latlon))
+    bird_data.sp <- st_transform(bird_data.sp, CRS(proj.aeqd))
+    bird_data.proj <- as.data.table(bird_data.sp) 
+    bird_data.proj <- bird_data.proj[,-c("geometry")]
+    bird_data.proj[,x := unlist(map(bird_data.sp$geometry,1))]
+    bird_data.proj[,y := unlist(map(bird_data.sp$geometry,2))]
 
 ### Read and transform wind data ----
-wind_data <- readRDS(paste0(wind_path,"/", wind_filename))%>% as.data.table
-wind_data[, wdir := atan2(u, v)*180/pi, by = 1:nrow(wind_data)] #get wind direction
-wind_data[, wdir := wdir+360*(wdir<0), by = 1:nrow(wind_data)] #correct wind direction to be between 0 and 360° 
-wind_data[, wspeed     := sqrt(u^2 + v^2), by = 1:nrow(wind_data)] #get wind speed
+    wind_data <- readRDS(paste0(wind_path,"/", wind_filename))%>% as.data.table
+    wind_data[, wdir := atan2(u, v)*180/pi, by = 1:nrow(wind_data)] #get wind direction
+    wind_data[, wdir := wdir+360*(wdir<0), by = 1:nrow(wind_data)] #correct wind direction to be between 0 and 360° 
+    wind_data[, wspeed     := sqrt(u^2 + v^2), by = 1:nrow(wind_data)] #get wind speed
 
-###parameters of the simulation ----
-n <- 4 #number of iterations to produce a track --> track with 2^n segments
-N <- 10000 #number of tracks created
+### parameters of the simulation ----
+    n <- 4 #number of iterations to produce a track --> track with 2^n segments
+    N <- 10000 #number of tracks created
 
 ### Main script ----
 
-
-    for (id in unique(bird_data.proj$ring)[1:5]){
+    for (id in unique(bird_data.proj$ring)){
           
           start.time <- Sys.time()
           # traj <- data.table(ring = c(), N = c(), x = c(), y = c())
@@ -82,8 +81,9 @@ N <- 10000 #number of tracks created
             registerDoParallel(cl)
             # getDoParWorkers()
           
-              traj <- foreach(k = 1:N, .errorhandling = 'pass', .packages = c("data.table", "rgdal", "sf", "sp", "windR")) %dopar% {  
+              traj <- foreach(k = 1:N, .errorhandling = 'pass', .packages = c("data.table", "rgdal", "sf", "sp")) %dopar% {  
                 
+                  # for(k in 1:N){
                     source("functions/FUNCTION_OverlapPoly.r")
         
                     # cat(k, "\n")
@@ -98,9 +98,9 @@ N <- 10000 #number of tracks created
                       for (i in 1:(length(traj_x)-1)) #create a new point betwen point i and i+1 
                       {
                         n.pts <- 100
-                        v <- c(traj_x[i+1]-traj_x[i], traj_y[i+1]-traj_y[i]) 
+                        v  <- c(traj_x[i+1]-traj_x[i], traj_y[i+1]-traj_y[i]) 
                         vn <- c(-v[2], v[1])/sqrt(v[1]^2+v[2]^2) #orthogonal vector to the segment treated 
-                        r <- runif(n.pts,-1,1)
+                        r  <- runif(n.pts,-1,1)
                         xi <- (traj_x[i]+traj_x[i+1])/2+a/(2^(j-1))*r*vn[1] #coords of the new points
                         yi <- (traj_y[i]+traj_y[i+1])/2+a/(2^(j-1))*r*vn[2]
                         
@@ -108,17 +108,22 @@ N <- 10000 #number of tracks created
                         
                         #quick.map(xi[which(land_out == FALSE)], yi[which(land_out == FALSE)],wrld) # just checking where the new locations are
                         a2 <- a
-                        while(length(which(land_out == FALSE)) < 3) # check that enough points are generated above ocean
-                        {
-                          a2<- 1.1*a2
-                          r <- runif(n.pts,-1,1)
+                        
+                        while(length(which(land_out == FALSE)) < 3 & a2 < 10*a){ # check that enough points are generated above ocean
+                          a2 <- 1.1*a2
+                          r  <- runif(n.pts,-1,1)
                           xi <- (traj_x[i]+traj_x[i+1])/2+a2/(2^(j-1))*r*vn[1]
                           yi <- (traj_y[i]+traj_y[i+1])/2+a2/(2^(j-1))*r*vn[2]
                           land_out <- is.land(x = xi, y = yi, prj = proj.aeqd, mask = wrld)
                         }
                         
-                        xi <- sample(xi[which(land_out == FALSE)], 1)
-                        yi <- sample(yi[which(land_out == FALSE)], 1)
+                        if(length(which(land_out == FALSE)) > 0){
+                            ii <- sample(which(land_out == FALSE), 1)
+                            xi <- xi[ii]; yi <- yi[ii]
+                        } else {
+                            ii <- sample(length(land_out), 1)
+                            xi <- xi[ii]; yi <- yi[ii]
+                        }
                         
                         traj_x_ <- append(traj_x_, c(xi,traj_x[i+1]))
                         traj_y_ <- append(traj_y_, c(yi,traj_y[i+1]))
@@ -145,8 +150,8 @@ N <- 10000 #number of tracks created
 
 
           #last traj = great circle line
-          start_pt_latlon <- traj[traj$N == 'obs', c("lon", "lat")][1]
-          end_pt_latlon   <- traj[traj$N == 'obs', c("lon", "lat")][nrow(traj[traj$N == 'obs',])]
+          start_pt_latlon <- traj[traj$N == 'obs', c("lon", "lat")][1,]
+          end_pt_latlon   <- traj[traj$N == 'obs', c("lon", "lat")][nrow(traj[traj$N == 'obs',]),]
           
           gctraj <- gcIntermediate(start_pt_latlon, end_pt_latlon, n = 2^n, addStartEnd = TRUE, sp = TRUE)
           
