@@ -83,7 +83,6 @@ sapply(c('sf','spData','tidyverse', 'data.table', 'magrittr', 'gdistance','geosp
           
               traj <- foreach(k = 1:N, .errorhandling = 'pass', .packages = c("data.table", "rgdal", "sf", "sp")) %dopar% {  
                 
-                  # for(k in 1:N){
                     source("functions/FUNCTION_OverlapPoly.r")
         
                     # cat(k, "\n")
@@ -121,7 +120,7 @@ sapply(c('sf','spData','tidyverse', 'data.table', 'magrittr', 'gdistance','geosp
                             ii <- sample(which(land_out == FALSE), 1)
                             xi <- xi[ii]; yi <- yi[ii]
                         } else {
-                            ii <- sample(length(land_out), 1)
+                            ii <- sample(1:length(land_out), 1)
                             xi <- xi[ii]; yi <- yi[ii]
                         }
                         
