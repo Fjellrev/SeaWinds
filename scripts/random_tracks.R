@@ -54,7 +54,7 @@ sapply(c('sf','spData','tidyverse', 'data.table', 'magrittr', 'gdistance','geosp
 
 ### Main script ----
 
-    for (id in unique(bird_data.proj$ring)[1:5]){
+    for (id in unique(bird_data.proj$ring)){
           
           start.time <- Sys.time()
           # traj <- data.table(ring = c(), N = c(), x = c(), y = c())
