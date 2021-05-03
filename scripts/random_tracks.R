@@ -49,12 +49,12 @@ sapply(c('sf','spData','tidyverse', 'data.table', 'magrittr', 'gdistance','geosp
     wind_data[, wspeed     := sqrt(u^2 + v^2), by = 1:nrow(wind_data)] #get wind speed
 
 ### parameters of the simulation ----
-    n <- 4 #number of iterations to produce a track --> track with 2^n segments
+    n <- 5 #number of iterations to produce a track --> track with 2^n segments
     N <- 10000 #number of tracks created
 
 ### Main script ----
 
-    for (id in unique(bird_data.proj$ring)){
+    for (id in unique(bird_data.proj$ring)[1:5]){
           
           start.time <- Sys.time()
           # traj <- data.table(ring = c(), N = c(), x = c(), y = c())
@@ -77,7 +77,7 @@ sapply(c('sf','spData','tidyverse', 'data.table', 'magrittr', 'gdistance','geosp
           
           # Registering backend for parallel computing
             n.cores <- detectCores() - detectCores() %/% 10
-            cl      <- makeCluster(n.cores, outfile = paste("outputs/log_makeCluster_", format(Sys.time(), "%Y%m%d_%H%M%S"),".txt", sep = "")) #, type = 'FORK')
+            cl      <- makeCluster(n.cores, sep = "")) #, type = 'FORK')
             registerDoParallel(cl)
             # getDoParWorkers()
           
@@ -193,7 +193,7 @@ sapply(c('sf','spData','tidyverse', 'data.table', 'magrittr', 'gdistance','geosp
             dplyr::ungroup() ->
           traj
           
-          saveRDS(traj, file = paste0("outputs/observed_sim_gc_tracks/tracks_",id,".rds"))
+          saveRDS(traj, file = paste0("outputs/observed_sim_gc_tracks/tracks_",id,"_n", n, ".rds"))
           
           cat(id, " --- ", round(difftime(Sys.time(), start.time, units = "secs"),1), "sec\n")
 
