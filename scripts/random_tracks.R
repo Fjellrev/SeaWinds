@@ -49,7 +49,7 @@ wind_data[, wdir := wdir+360*(wdir<0), by = 1:nrow(wind_data)] #correct wind dir
 wind_data[, wspeed     := sqrt(u^2 + v^2), by = 1:nrow(wind_data)] #get wind speed
 
 ###parameters of the simulation ----
-n <- 4 #number of iterations to produce a track --> track with 2^n segments
+n <- 5 #number of iterations to produce a track --> track with 2^n segments
 N <- 1000 #number of tracks created
 
 ### Main script ----
@@ -172,28 +172,28 @@ for (id in unique(bird_data.proj$ring))
 
 #### Display ---- 
 
-#col_ws = c('firebrick4', 'firebrick3', 'gold', 'gold', 'springgreen3', 'springgreen4')
+col_ws = c('firebrick4', 'firebrick3', 'gold', 'gold', 'springgreen3', 'springgreen4')
 
-#plot_ <- ggplot(data=traj[track_type!="observed"]) + 
-#geom_segment(size = .75, aes(x = x, y = y,xend=x2,yend=y2,color=mean_ws)) +
-#scale_colour_gradientn(colours = col_ws)+
-#geom_segment(data = traj[track_type=="observed"], size = 1.25, aes(x = x, y = y,xend=x2,yend=y2),color='black') +
-#geom_sf(data=world,fill = "black", color = "black") + 
-#geom_point(aes(x=start_pt$x, y =start_pt$y), color = 'blue', size = 2.5) +
-#geom_point(aes(x=end_pt$x, y =end_pt$y), color = 'red', size = 2.5) +
-#coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)+
-#ggtitle(paste0("n = ",n, " ; ring = ",id))
-#print(plot_)
+plot_ <- ggplot(data=traj[track_type!="observed"]) + 
+geom_segment(size = .75, aes(x = x, y = y,xend=x2,yend=y2,color=mean_ws)) +
+scale_colour_gradientn(colours = col_ws)+
+geom_segment(data = traj[track_type=="observed"], size = 1.25, aes(x = x, y = y,xend=x2,yend=y2),color='black') +
+geom_sf(data=world,fill = "black", color = "black") + 
+geom_point(aes(x=start_pt$x, y =start_pt$y), color = 'blue', size = 2.5) +
+geom_point(aes(x=end_pt$x, y =end_pt$y), color = 'red', size = 2.5) +
+coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)+
+ggtitle(paste0("n = ",n, " ; ring = ",id))
+print(plot_)
 
-#r <- raster(xmn=-70.25, xmx=70.25, ymn=29.75, ymx=85.25, res=1.5) #Empty raster of the studied area
+r <- raster(xmn=-70.25, xmx=70.25, ymn=29.75, ymx=85.25, res=1.5) #Empty raster of the studied area
 
-#r.ws <- rasterize(traj[track_type!="observed"][,c("x","y")],r,field=traj[track_type!="observed"]$mean_ws,fun=mean)%>%as.data.frame(xy=T)
-#plot_ <- ggplot(data=r.ws) + 
-#geom_raster(aes(x = x, y = y,fill=layer)) +
-#scale_fill_gradientn(colours = col_ws, name="WS" )+
-#geom_segment(data = traj[track_type=="observed"], size = 1.25, aes(x = x, y = y,xend=x2,yend=y2),color='black') +
-#geom_segment(data = traj[track_type=="gc"], size = 1.25, aes(x = x, y = y,xend=x2,yend=y2),color='black') +
-#geom_sf(data=world,fill = "black", color = "black") + 
-#coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)+
-#ggtitle(paste0("n = ",n, " ; ring = ",id))
-#print(plot_)
+r.ws <- rasterize(traj[track_type!="observed"][,c("x","y")],r,field=traj[track_type!="observed"]$mean_ws,fun=mean)%>%as.data.frame(xy=T)
+plot_ <- ggplot(data=r.ws) + 
+geom_raster(aes(x = x, y = y,fill=layer)) +
+scale_fill_gradientn(colours = col_ws, name="WS" )+
+geom_segment(data = traj[track_type=="observed"], size = 1.25, aes(x = x, y = y,xend=x2,yend=y2),color='black') +
+geom_segment(data = traj[track_type=="gc"], size = 1.25, aes(x = x, y = y,xend=x2,yend=y2),color='black') +
+geom_sf(data=world,fill = "black", color = "black") + 
+coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)+
+ggtitle(paste0("n = ",n, " ; ring = ",id))
+print(plot_)
