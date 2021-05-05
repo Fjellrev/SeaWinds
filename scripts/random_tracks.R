@@ -4,7 +4,7 @@
 ##
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-sapply(c('sf','spData','tidyverse', 'data.table', 'magrittr', 'gdistance','geosphere','raster',
+sapply(c('sf','spData','tidyverse', 'data.table', 'magrittr', 'gdistance','geosphere','raster', "doParallel", "foreach",
          'ggplot2', 'rWind','windR'),
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 
@@ -17,10 +17,10 @@ sind <-function(x) sin(x*pi/180)
 
 bird_path <- "data/Kittiwake_data_treated"
 bird_filename <- "BLKI_Alkefjellet_May_tracks.rds"
-wind_path <- "data/ERA-Interrim/Interanual_means" 
-wind_filename <-  "ERA_Interim_interanual_monthly_mean_sfc_10_2013_to_2018.rds"
+wind_path <- "data/ERA_Interim/Interannual_means" 
+wind_filename <-  "ERA_Interim_interannual_monthly_mean_sfc_10_2013_to_2018.rds"
 map_path <- "data/baseline_data"
-map_filename <- "SEAwinds_Worldmap_res-l.rds"
+map_filename <- "SEAwinds_Worldmap_res-c.rds"
 
 ### Read BLKI data ----
 bird_data <- readRDS(paste0(bird_path,'/', bird_filename)) %>% as.data.table
@@ -48,152 +48,181 @@ wind_data[, wdir := atan2(u, v)*180/pi, by = 1:nrow(wind_data)] #get wind direct
 wind_data[, wdir := wdir+360*(wdir<0), by = 1:nrow(wind_data)] #correct wind direction to be between 0 and 360° 
 wind_data[, wspeed     := sqrt(u^2 + v^2), by = 1:nrow(wind_data)] #get wind speed
 
-###parameters of the simulation ----
+### parameters of the simulation ----
 n <- 5 #number of iterations to produce a track --> track with 2^n segments
-N <- 1000 #number of tracks created
+N <- 10000 #number of tracks created
 
 ### Main script ----
-for (id in unique(bird_data.proj$ring))
-{
-  cat(id, "\n")
-  traj <- data.table(ring = c(), N = c(), track_type = c(), x = c(), y = c())
+
+for (id in unique(bird_data.proj$ring)){
+  
+  start.time <- Sys.time()
+  # traj <- data.table(ring = c(), N = c(), x = c(), y = c())
   
   #first trajectory = observed track
   
-  traj_id <- bird_data.proj[bird_data.proj$ring==id]
-  start_pt <- traj_id[,c("x","y")][1] 
-  end_pt <- traj_id[,c("x","y")][nrow(traj_id)]
-  traj_0 <- data.table(ring=rep(id,nrow(traj_id)), N = rep("observed",nrow(traj_id)), track_type = rep("observed",nrow(traj_id)),
-                       x= traj_id$x, y = traj_id$y)
-  traj <- rbind(traj,traj_0)
+  bird_data.proj %>%
+    dplyr::filter(ring == id) %>%
+    dplyr::mutate(N = 'obs') %>%
+    dplyr::select(ring, N, x, y) %>%
+    tibble() -> 
+    traj_0
+  
+  start_pt <- traj_0[1 ,c("x","y")] 
+  end_pt   <- traj_0[nrow(traj_0),c("x","y")]
   
   #N random tracks
   
-  a <- sqrt((start_pt$x-end_pt$x)^2+(start_pt$y-end_pt$y)^2)/3 #magnitude of the deviation
+  a <- sqrt((start_pt$x - end_pt$x)^2 + (start_pt$y - end_pt$y)^2)/3 #magnitude of the deviation
   
-  for (k in 1:N)
-  {
-    cat(k, "\n")
-    traj_x <- c(start_pt$x,end_pt$x) #x coords of the track
-    traj_y <- c(start_pt$y,end_pt$y)
+  # Registering backend for parallel computing
+  n.cores <- detectCores() - detectCores() %/% 10
+  cl      <- makeCluster(n.cores, sep = "")) #, type = 'FORK')
+registerDoParallel(cl)
+# getDoParWorkers()
+
+traj <- foreach(k = 1:N, .errorhandling = 'pass', .packages = c("data.table", "rgdal", "sf", "sp")) %dopar% {  
+  
+  source("functions/FUNCTION_OverlapPoly.r")
+  
+  # cat(k, "\n")
+  traj_x <- c(start_pt$x,end_pt$x) #x coords of the track
+  traj_y <- c(start_pt$y,end_pt$y)
+  
+  for (j in 1:n){
     
-    for (j in 1:n) 
+    traj_x_ <- c(traj_x[1]) #new x coords 
+    traj_y_ <- c(traj_y[1])
+    
+    for (i in 1:(length(traj_x)-1)) #create a new point betwen point i and i+1 
     {
-      traj_x_ <- c(traj_x[1]) #new x coords 
-      traj_y_ <- c(traj_y[1])
+      n.pts <- 100
+      v  <- c(traj_x[i+1]-traj_x[i], traj_y[i+1]-traj_y[i]) 
+      vn <- c(-v[2], v[1])/sqrt(v[1]^2+v[2]^2) #orthogonal vector to the segment treated 
+      r  <- runif(n.pts,-1,1)
+      xi <- (traj_x[i]+traj_x[i+1])/2+a/(2^(j-1))*r*vn[1] #coords of the new points
+      yi <- (traj_y[i]+traj_y[i+1])/2+a/(2^(j-1))*r*vn[2]
       
-      for (i in 1:(length(traj_x)-1)) #create a new point betwen point i and i+1 
-      {
-        n.pts <- 100
-        v <- c(traj_x[i+1]-traj_x[i], traj_y[i+1]-traj_y[i]) 
-        vn <- c(-v[2], v[1])/sqrt(v[1]^2+v[2]^2) #orthogonal vector to the segment treated 
-        r <- runif(n.pts,-1,1)
-        xi <- (traj_x[i]+traj_x[i+1])/2+a/(2^(j-1))*r*vn[1] #coords of the new points
-        yi <- (traj_y[i]+traj_y[i+1])/2+a/(2^(j-1))*r*vn[2]
-        
-        
+      land_out <- is.land(x = xi, y = yi, prj = proj.aeqd, mask = wrld)
+      
+      #quick.map(xi[which(land_out == FALSE)], yi[which(land_out == FALSE)],wrld) # just checking where the new locations are
+      a2 <- a
+      
+      while(length(which(land_out == FALSE)) < 3 & a2 < 10*a){ # check that enough points are generated above ocean
+        a2 <- 1.1*a2
+        r  <- runif(n.pts,-1,1)
+        xi <- (traj_x[i]+traj_x[i+1])/2+a2/(2^(j-1))*r*vn[1]
+        yi <- (traj_y[i]+traj_y[i+1])/2+a2/(2^(j-1))*r*vn[2]
         land_out <- is.land(x = xi, y = yi, prj = proj.aeqd, mask = wrld)
-        
-        #quick.map(xi[which(land_out == FALSE)], yi[which(land_out == FALSE)],wrld) # just checking where the new locations are
-        a2 <- a
-        while(length(which(land_out == FALSE)) < 3) # check that enough points are generated above ocean
-        {
-          a2<- 1.1*a2
-          r <- runif(n.pts,-1,1)
-          xi <- (traj_x[i]+traj_x[i+1])/2+a2/(2^(j-1))*r*vn[1]
-          yi <- (traj_y[i]+traj_y[i+1])/2+a2/(2^(j-1))*r*vn[2]
-          land_out <- is.land(x = xi, y = yi, prj = proj.aeqd, mask = wrld)
-        }
-        
-        xi <- sample(xi[which(land_out == FALSE)], 1)
-        yi <- sample(yi[which(land_out == FALSE)], 1)
-        
-        traj_x_ <- append(traj_x_, c(xi,traj_x[i+1]))
-        traj_y_ <- append(traj_y_, c(yi,traj_y[i+1]))
       }
-      traj_x <- traj_x_
-      traj_y <- traj_y_
+      
+      if(length(which(land_out == FALSE)) > 0){
+        ii <- sample(which(land_out == FALSE), 1)
+        xi <- xi[ii]; yi <- yi[ii]
+      } else {
+        ii <- sample(1:length(land_out), 1)
+        xi <- xi[ii]; yi <- yi[ii]
+      }
+      
+      traj_x_ <- append(traj_x_, c(xi,traj_x[i+1]))
+      traj_y_ <- append(traj_y_, c(yi,traj_y[i+1]))
     }
-    
-    traj_k <- data.table(ring=rep(id,length(traj_x)), N = rep(k, length(traj_x)), track_type = rep("sim",length(traj_x)), x = traj_x, y = traj_y)
-    traj <- rbind(traj,traj_k)
+    traj_x <- traj_x_
+    traj_y <- traj_y_
   }
   
-  #into geographic coord
-  traj.sp <- st_as_sf(traj, coords=4:5, crs=CRS(proj.aeqd))
-  traj.sp <- st_transform(traj.sp, CRS(proj.latlon))
-  traj <- as.data.table(traj.sp) 
-  traj <- traj[,-c("geometry")]
-  traj[,x := unlist(map(traj.sp$geometry,1))]
-  traj[,y := unlist(map(traj.sp$geometry,2))]
+  traj_k <- data.table(ring=rep(id,length(traj_x)), N = formatC(rep(k, length(traj_x)), flag = '0', width = nchar(max(N))), x = traj_x, y = traj_y)
+  traj_k
+}
+
+stopCluster(cl) # close connection to cluster/cores
+
+rbindlist(traj) %>%
+  bind_rows(traj_0, .) %>%
+  sf::st_as_sf(. ,coords=c("x","y"), crs=CRS(proj.aeqd)) %>%
+  sf::st_transform(CRS(proj.latlon)) %>%  # reproject to longlat
+  dplyr::mutate(lon = st_coordinates(.)[,1], lat = st_coordinates(.)[,2]) %>%
+  tibble() %>%
+  dplyr::select(ring, N, lon, lat) %>%
+  dplyr::filter(!N %in% unique(.$N[.$lon < -70 | .$lon > 70 | .$lat > 85 | .$lat < 30])) -> #remove above land and outside the study area
+  traj
+
+
+#last traj = great circle line
+start_pt_latlon <- traj[traj$N == 'obs', c("lon", "lat")][1,]
+end_pt_latlon   <- traj[traj$N == 'obs', c("lon", "lat")][nrow(traj[traj$N == 'obs',]),]
+
+gctraj <- gcIntermediate(start_pt_latlon, end_pt_latlon, n = 2^n, addStartEnd = TRUE, sp = TRUE)
+
+tibble(ring = rep(id, 2^n+2), N = rep('gc', 2^n+2)) %>%
+  dplyr::mutate(lon = geom(gctraj)[,"x"], lat = geom(gctraj)[, "y"]) %>%
+  dplyr::bind_rows(traj, .) ->
+  traj
+
+split(traj, as.factor(traj$N)) %>%
+  purrr::map(~ mutate(., gspeed = c(geosphere::distGeo(.[1:(nrow(.)-1), c("lon","lat")], .[2:(nrow(.)), c("lon","lat")]), NA))) %>%
+  purrr::map(~ mutate(., gdir = c(geosphere::bearing(.[1:(nrow(.)-1), c("lon","lat")], .[2:(nrow(.)), c("lon","lat")]), NA))) %>%
+  dplyr::bind_rows() ->
+  traj
+
+
+# Registering backend for parallel computing
+n.cores <- detectCores() - detectCores() %/% 10
+cl      <- makeCluster(n.cores, outfile = paste("outputs/log_makeCluster_", format(Sys.time(), "%Y%m%d_%H%M%S"),".txt", sep = "")) #, type = 'FORK')
+registerDoParallel(cl)
+# getDoParWorkers()
+
+wind_df <- foreach(i = 1:nrow(traj), .errorhandling = 'pass', .packages = c("data.table", "rgdal", "sf", "sp", "windR")) %dopar% {  
   
-  #remove above land and outside the study area
-  rm_2 <- unique(traj$N[traj$x < -70|traj$x>70|traj$y>85|traj$y<30])
-  traj <- traj[not(traj$N%in%rm_2)]
-  
-  #last traj = great circle line
-  start_pt_latlon <- traj[traj$ring==id&traj$track_type=="observed"][1]
-  end_pt_latlon <-  traj[traj$ring==id&traj$track_type=="observed"][nrow(traj[traj$ring==id&traj$track_type=="observed"])]
-  traj_gc <- data.table(ring = rep(id,22),N=rep("gc",22), track_type=rep("gc",22))
-  gctraj <- gcIntermediate(c(start_pt_latlon$x,start_pt_latlon$y),c(end_pt_latlon$x,end_pt_latlon$y), n = 20, addStartEnd = TRUE, sp = TRUE)
-  traj_gc[, x :=geom(gctraj)[,"x"]]
-  traj_gc[, y :=geom(gctraj)[,"y"]]
-  traj <- rbind(traj,traj_gc)
-  
-  ### Analysis of tracks ----
-  
-  traj[, x2 := data.table::shift(x, type = 'lead'), by = N]
-  traj[, y2 := data.table::shift(y, type = 'lead'), by = N]
-  
-  #1. speed and direction
-  
-  traj[, gspeed := distGeo(traj[,c("x","y")],traj[,c("x2","y2")])]
-  traj[, gdir := geosphere::bearing(traj[,c("x","y")],traj[,c("x2","y2")])]
-  
-  #2. wind conditions
-  u_wind = c()
-  v_wind = c()
-  for (i in 1:nrow(traj)) #get the wind data at the given coordinates and dates
-  {
-    uv_wind = getWind(traj$x[i], traj$y[i], w = wind_data, PROJ = proj.latlon)
-    u_wind = append(u_wind, uv_wind[1])
-    v_wind = append(v_wind, uv_wind[2])
-  }
-  traj[,u_wind := as.numeric(u_wind)]
-  traj[,v_wind := as.numeric(v_wind)]
-  
-  traj[, wdir := atan2(u_wind, v_wind)*180/pi, by = 1:nrow(traj)] #wind direction
-  traj[, wspeed     := sqrt(u_wind^2 + v_wind^2), by = 1:nrow(traj)] #wind speed
-  traj[, ws := wspeed*cosd(wdir -gdir)] #wind support
-  traj[, mean_ws := mean(traj$ws[traj$N==N], na.rm= T), by = 1:nrow(traj)]
-  
-  saveRDS(traj, file = paste0("outputs/observed_sim_gc_tracks/tracks_",id,".rds"))
+  uv_wind = getWind(traj$lon[i], traj$lat[i], w = wind_data, PROJ = proj.latlon)
+  cbind.data.frame(u = uv_wind[[1]], v = uv_wind[[2]])
+}
+
+stopCluster(cl)
+
+wind_df <- rbindlist(wind_df)
+
+traj %>%
+  dplyr::mutate(u_wind = as.numeric(wind_df$u),
+                v_wind = as.numeric(wind_df$v),
+                wdir = atan2(u_wind, v_wind)*180/pi, #wind direction
+                wspeed = sqrt(u_wind^2 + v_wind^2),   #wind speed
+                ws = wspeed*cosd(wdir -gdir)) %>%     #wind support
+  dplyr::group_by(N) %>%
+  dplyr::mutate(mean_ws = mean(ws, na.rm = T)) %>%
+  dplyr::ungroup() ->
+  traj
+
+saveRDS(traj, file = paste0("outputs/observed_sim_gc_tracks/tracks_",id,"_n", n, ".rds"))
+
+cat(id, " --- ", round(difftime(Sys.time(), start.time, units = "secs"),1), "sec\n")
+
 }
 
 #### Display ---- 
 
-col_ws = c('firebrick4', 'firebrick3', 'gold', 'gold', 'springgreen3', 'springgreen4')
+#col_ws = c('firebrick4', 'firebrick3', 'gold', 'gold', 'springgreen3', 'springgreen4')
 
-plot_ <- ggplot(data=traj[track_type!="observed"]) + 
-geom_segment(size = .75, aes(x = x, y = y,xend=x2,yend=y2,color=mean_ws)) +
-scale_colour_gradientn(colours = col_ws)+
-geom_segment(data = traj[track_type=="observed"], size = 1.25, aes(x = x, y = y,xend=x2,yend=y2),color='black') +
-geom_sf(data=world,fill = "black", color = "black") + 
-geom_point(aes(x=start_pt$x, y =start_pt$y), color = 'blue', size = 2.5) +
-geom_point(aes(x=end_pt$x, y =end_pt$y), color = 'red', size = 2.5) +
-coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)+
-ggtitle(paste0("n = ",n, " ; ring = ",id))
-print(plot_)
+#plot_ <- ggplot(data=traj[track_type!="observed"]) + 
+#geom_segment(size = .75, aes(x = x, y = y,xend=x2,yend=y2,color=mean_ws)) +
+#scale_colour_gradientn(colours = col_ws)+
+#geom_segment(data = traj[track_type=="observed"], size = 1.25, aes(x = x, y = y,xend=x2,yend=y2),color='black') +
+#geom_sf(data=world,fill = "black", color = "black") + 
+#geom_point(aes(x=start_pt$x, y =start_pt$y), color = 'blue', size = 2.5) +
+#geom_point(aes(x=end_pt$x, y =end_pt$y), color = 'red', size = 2.5) +
+#coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)+
+#ggtitle(paste0("n = ",n, " ; ring = ",id))
+#print(plot_)
 
-r <- raster(xmn=-70.25, xmx=70.25, ymn=29.75, ymx=85.25, res=1.5) #Empty raster of the studied area
+#r <- raster(xmn=-70.25, xmx=70.25, ymn=29.75, ymx=85.25, res=1.5) #Empty raster of the studied area
 
-r.ws <- rasterize(traj[track_type!="observed"][,c("x","y")],r,field=traj[track_type!="observed"]$mean_ws,fun=mean)%>%as.data.frame(xy=T)
-plot_ <- ggplot(data=r.ws) + 
-geom_raster(aes(x = x, y = y,fill=layer)) +
-scale_fill_gradientn(colours = col_ws, name="WS" )+
-geom_segment(data = traj[track_type=="observed"], size = 1.25, aes(x = x, y = y,xend=x2,yend=y2),color='black') +
-geom_segment(data = traj[track_type=="gc"], size = 1.25, aes(x = x, y = y,xend=x2,yend=y2),color='black') +
-geom_sf(data=world,fill = "black", color = "black") + 
-coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)+
-ggtitle(paste0("n = ",n, " ; ring = ",id))
-print(plot_)
+#r.ws <- rasterize(traj[track_type!="observed"][,c("x","y")],r,field=traj[track_type!="observed"]$mean_ws,fun=mean)%>%as.data.frame(xy=T)
+#plot_ <- ggplot(data=r.ws) + 
+#geom_raster(aes(x = x, y = y,fill=layer)) +
+#scale_fill_gradientn(colours = col_ws, name="WS" )+
+#geom_segment(data = traj[track_type=="observed"], size = 1.25, aes(x = x, y = y,xend=x2,yend=y2),color='black') +
+#geom_segment(data = traj[track_type=="gc"], size = 1.25, aes(x = x, y = y,xend=x2,yend=y2),color='black') +
+#geom_sf(data=world,fill = "black", color = "black") + 
+#coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)+
+#ggtitle(paste0("n = ",n, " ; ring = ",id))
+#print(plot_)
