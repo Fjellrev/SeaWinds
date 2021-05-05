@@ -38,7 +38,7 @@ wrld <- st_transform(world_map,CRS(proj.aeqd))
 
 #traj analysis
 stat <- data.frame(track_type = c(), f_cor = c())
-for (id in ring[14])
+for (id in ring)
 {
   cat(id)
   data_filename <- paste0("tracks_",id,".rds")
@@ -65,20 +65,19 @@ for (id in ring[14])
   
   stat <- rbind(stat, data.frame(track_type = c("obs","gc"),f_cor = c(f_obs,f_gc)))
   
-  kde <- kde2d(traj[track_type!="observed"&mean_ws>ws_opt]$lon,
-  traj[track_type!="observed"&mean_ws>ws_opt]$lat)
-  kde.df <- raster(kde)%>% as.data.frame(xy=T)
+  #kde <- kde2d(traj[track_type!="observed"&mean_ws>ws_opt]$lon,
+  #traj[track_type!="observed"&mean_ws>ws_opt]$lat)
+  #kde.df <- raster(kde)%>% as.data.frame(xy=T)
   
-  plot_ <- ggplot(data=traj[N=="obs"]) + 
-  geom_raster(data=kde.df, aes(x=x,y=y, fill=layer))+
-  geom_sf(data=ver_opt_traj,fill="green", alpha = 0, size = 2, color="green")+
-  geom_segment(data = traj[N=="obs"], size = 1.25, aes(x = lon, y = lat,xend=lon2,yend=lat2),color='black') +
-  geom_segment(data = traj[N=="gc"], size = 1.25, aes(x = lon, y = lat,xend=lon2,yend=lat2),color='red') +
-  geom_sf(data=world,fill = "grey", color = "grey") + 
-  coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)
-  print(plot_)
+  #plot_ <- ggplot(data=traj[N=="obs"]) + 
+  #geom_raster(data=kde.df, aes(x=x,y=y, fill=layer))+
+  #geom_sf(data=ver_opt_traj,fill="green", alpha = 0, size = 2, color="green")+
+  #geom_segment(data = traj[N=="obs"], size = 1.25, aes(x = lon, y = lat,xend=lon2,yend=lat2),color='black') +
+  #geom_segment(data = traj[N=="gc"], size = 1.25, aes(x = lon, y = lat,xend=lon2,yend=lat2),color='red') +
+  #geom_sf(data=world,fill = "grey", color = "grey") + 
+  #coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)
+  #print(plot_)
   
 }
 
 ggplot(stat)+geom_boxplot(aes(x=track_type, y = f_cor), notch = T)
-t
