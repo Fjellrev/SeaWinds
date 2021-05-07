@@ -16,9 +16,13 @@ cosd <-function(x) cos(x*pi/180) #cos of an angle in degrees
 sind <-function(x) sin(x*pi/180) 
 
 bird_path <- "data/Kittiwake_data_treated"
-bird_filename <- "BLKI_Alkefjellet_May_tracks.rds"
+bird_filename <- "BLKI_tracks_autumn.rds" #for autumn tracks
+#bird_filename <- "BLKI_tracks_spring.rds" #for spring tracks
+
 wind_path <- "data/ERA_Interim/Interannual_means" 
-wind_filename <-  "ERA_Interim_interannual_monthly_mean_sfc_11_2013_to_2018.rds"
+wind_filename <-  "ERA_Interim_interannual_monthly_mean_sfc_11_2013_to_2018.rds" #for autumn tracks
+#wind_filename <-  "ERA_Interim_interannual_monthly_mean_sfc_03_2013_to_2018.rds" #for spring tracks
+
 map_path <- "data/baseline_data"
 map_filename <- "SEAwinds_Worldmap_res-c.rds"
 
@@ -50,7 +54,7 @@ wind_data[, wspeed     := sqrt(u^2 + v^2), by = 1:nrow(wind_data)] #get wind spe
 
 ### parameters of the simulation ----
 n <- 5 #number of iterations to produce a track --> track with 2^n segments
-N <- 10000 #number of tracks created
+N <- 15000 #number of tracks created
 
 ### Main script ----
 
@@ -147,7 +151,8 @@ rbindlist(traj) %>%
   dplyr::filter(!N %in% unique(.$N[.$lon < -70 | .$lon > 70 | .$lat > 85 | .$lat < 30])) %>%
   dplyr::filter(!N %in% unique(.$N[.$lon < -50 & .$lat > 60]))-> #remove above land and outside the study area
   traj
-#need to add a line to sample 10000 traj
+
+traj <- traj[sample(nrow(traj),10000),]
 
 #last traj = great circle line
 start_pt_latlon <- traj[traj$N == 'obs', c("lon", "lat")][1,]
@@ -194,7 +199,8 @@ traj %>%
   dplyr::ungroup() ->
   traj
 
-saveRDS(traj, file = paste0("outputs/observed_sim_gc_tracks/tracks_",id,"_n", n, ".rds"))
+saveRDS(traj, file = paste0("outputs/observed_sim_gc_tracks/tracks_",id,"_autumn","_n", n, ".rds")) #for autumn tracks
+#saveRDS(traj, file = paste0("outputs/observed_sim_gc_tracks/tracks_",id,"_spring","_n", n, ".rds")) #for spring tracks
 
 cat(id, " --- ", round(difftime(Sys.time(), start.time, units = "secs"),1), "sec\n")
 
