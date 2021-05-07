@@ -16,12 +16,9 @@ cosd <-function(x) cos(x*pi/180) #cos of an angle in degrees
 sind <-function(x) sin(x*pi/180) 
 
 bird_path <- "data/Kittiwake_data_treated"
-bird_filename <- "BLKI_tracks_autumn.rds" #for autumn tracks
-#bird_filename <- "BLKI_tracks_spring.rds" #for spring tracks
+bird_filename <- "BLKI_tracks.rds"
 
 wind_path <- "data/ERA_Interim/Interannual_means" 
-wind_filename <-  "ERA_Interim_interannual_monthly_mean_sfc_11_2013_to_2018.rds" #for autumn tracks
-#wind_filename <-  "ERA_Interim_interannual_monthly_mean_sfc_03_2013_to_2018.rds" #for spring tracks
 
 map_path <- "data/baseline_data"
 map_filename <- "SEAwinds_Worldmap_res-c.rds"
@@ -46,165 +43,178 @@ bird_data.proj <- bird_data.proj[,-c("geometry")]
 bird_data.proj[,x := unlist(map(bird_data.sp$geometry,1))]
 bird_data.proj[,y := unlist(map(bird_data.sp$geometry,2))]
 
-### Read and transform wind data ----
-wind_data <- readRDS(paste0(wind_path,"/", wind_filename))%>% as.data.table
-wind_data[, wdir := atan2(u, v)*180/pi, by = 1:nrow(wind_data)] #get wind direction
-wind_data[, wdir := wdir+360*(wdir<0), by = 1:nrow(wind_data)] #correct wind direction to be between 0 and 360° 
-wind_data[, wspeed     := sqrt(u^2 + v^2), by = 1:nrow(wind_data)] #get wind speed
-
 ### parameters of the simulation ----
 n <- 5 #number of iterations to produce a track --> track with 2^n segments
 N <- 15000 #number of tracks created
 
 ### Main script ----
 
-for (id in unique(bird_data.proj$ring)){
+months <- unique(bird_data.proj$migr_month)
+for (month in months){
   
-  start.time <- Sys.time()
-  # traj <- data.table(ring = c(), N = c(), x = c(), y = c())
+  ### Read and transform wind data ----
   
-  #first trajectory = observed track
+  wind_filename <-  paste0("ERA_Interim_interannual_monthly_mean_sfc_",month,"_2013_to_2018.rds")
   
-  bird_data.proj %>%
-    dplyr::filter(ring == id) %>%
-    dplyr::mutate(N = 'obs') %>%
-    dplyr::select(ring, N, x, y) %>%
-    tibble() -> 
-    traj_0
+  wind_data <- readRDS(paste0(wind_path,"/", wind_filename))%>% as.data.table
+  wind_data[, wdir := atan2(u, v)*180/pi, by = 1:nrow(wind_data)] #get wind direction
+  wind_data[, wdir := wdir+360*(wdir<0), by = 1:nrow(wind_data)] #correct wind direction to be between 0 and 360° 
+  wind_data[, wspeed     := sqrt(u^2 + v^2), by = 1:nrow(wind_data)] #get wind speed
   
-  start_pt <- traj_0[1 ,c("x","y")] 
-  end_pt   <- traj_0[nrow(traj_0),c("x","y")]
-  
-  #N random tracks
-  
-  a <- sqrt((start_pt$x - end_pt$x)^2 + (start_pt$y - end_pt$y)^2)/3 #magnitude of the deviation
-  
-  # Registering backend for parallel computing
-  n.cores <- detectCores() - detectCores() %/% 10
-  cl      <- makeCluster(n.cores, sep = "")) #, type = 'FORK')
-registerDoParallel(cl)
-# getDoParWorkers()
-
-traj <- foreach(k = 1:N, .errorhandling = 'pass', .packages = c("data.table", "rgdal", "sf", "sp")) %dopar% {  
-  
-  source("functions/FUNCTION_OverlapPoly.r")
-  
-  # cat(k, "\n")
-  traj_x <- c(start_pt$x,end_pt$x) #x coords of the track
-  traj_y <- c(start_pt$y,end_pt$y)
-  
-  for (j in 1:n){
+  for (id in unique(bird_data.proj$burst[bird_data.proj$migr_month==month])){
     
-    traj_x_ <- c(traj_x[1]) #new x coords 
-    traj_y_ <- c(traj_y[1])
+    start.time <- Sys.time()
+    # traj <- data.table(ring = c(), N = c(), x = c(), y = c())
     
-    for (i in 1:(length(traj_x)-1)) #create a new point betwen point i and i+1 
-    {
-      n.pts <- 100
-      v  <- c(traj_x[i+1]-traj_x[i], traj_y[i+1]-traj_y[i]) 
-      vn <- c(-v[2], v[1])/sqrt(v[1]^2+v[2]^2) #orthogonal vector to the segment treated 
-      r  <- runif(n.pts,-1,1)
-      xi <- (traj_x[i]+traj_x[i+1])/2+a/(2^(j-1))*r*vn[1] #coords of the new points
-      yi <- (traj_y[i]+traj_y[i+1])/2+a/(2^(j-1))*r*vn[2]
+    
+    #first trajectory = observed track
+    
+    bird_data.proj %>%
+      dplyr::filter(burst == id) %>%
+      dplyr::mutate(N = 'obs') %>%
+      dplyr::select(ring,burst,migr_month, N, x, y) %>%
+      tibble() -> 
+      traj_0
+    
+    start_pt <- traj_0[1 ,c("x","y")] 
+    end_pt   <- traj_0[nrow(traj_0),c("x","y")]
+    
+    #N random tracks
+    
+    a <- sqrt((start_pt$x - end_pt$x)^2 + (start_pt$y - end_pt$y)^2)/3 #magnitude of the deviation
+    
+    # Registering backend for parallel computing
+    n.cores <- detectCores() - detectCores() %/% 10
+    cl      <- makeCluster(n.cores, sep = "") #, type = 'FORK')
+    registerDoParallel(cl)
+    # getDoParWorkers()
+    
+    traj <- foreach(k = 1:N, .errorhandling = 'pass', .packages = c("data.table", "rgdal", "sf", "sp")) %dopar% {  
       
-      land_out <- is.land(x = xi, y = yi, prj = proj.aeqd, mask = wrld)
+      source("functions/FUNCTION_OverlapPoly.r")
       
-      #quick.map(xi[which(land_out == FALSE)], yi[which(land_out == FALSE)],wrld) # just checking where the new locations are
-      a2 <- a
+      # cat(k, "\n")
+      traj_x <- c(start_pt$x,end_pt$x) #x coords of the track
+      traj_y <- c(start_pt$y,end_pt$y)
       
-      while(length(which(land_out == FALSE)) < 3 & a2 < 10*a){ # check that enough points are generated above ocean
-        a2 <- 1.1*a2
-        r  <- runif(n.pts,-1,1)
-        xi <- (traj_x[i]+traj_x[i+1])/2+a2/(2^(j-1))*r*vn[1]
-        yi <- (traj_y[i]+traj_y[i+1])/2+a2/(2^(j-1))*r*vn[2]
-        land_out <- is.land(x = xi, y = yi, prj = proj.aeqd, mask = wrld)
+      for (j in 1:n){
+        
+        traj_x_ <- c(traj_x[1]) #new x coords 
+        traj_y_ <- c(traj_y[1])
+        
+        for (i in 1:(length(traj_x)-1)) #create a new point betwen point i and i+1 
+        {
+          n.pts <- 100
+          v  <- c(traj_x[i+1]-traj_x[i], traj_y[i+1]-traj_y[i]) 
+          vn <- c(-v[2], v[1])/sqrt(v[1]^2+v[2]^2) #orthogonal vector to the segment treated 
+          r  <- runif(n.pts,-1,1)
+          xi <- (traj_x[i]+traj_x[i+1])/2+a/(2^(j-1))*r*vn[1] #coords of the new points
+          yi <- (traj_y[i]+traj_y[i+1])/2+a/(2^(j-1))*r*vn[2]
+          
+          land_out <- is.land(x = xi, y = yi, prj = proj.aeqd, mask = wrld)
+          
+          #quick.map(xi[which(land_out == FALSE)], yi[which(land_out == FALSE)],wrld) # just checking where the new locations are
+          a2 <- a
+          
+          while(length(which(land_out == FALSE)) < 3 & a2 < 10*a){ # check that enough points are generated above ocean
+            a2 <- 1.1*a2
+            r  <- runif(n.pts,-1,1)
+            xi <- (traj_x[i]+traj_x[i+1])/2+a2/(2^(j-1))*r*vn[1]
+            yi <- (traj_y[i]+traj_y[i+1])/2+a2/(2^(j-1))*r*vn[2]
+            land_out <- is.land(x = xi, y = yi, prj = proj.aeqd, mask = wrld)
+          }
+          
+          if(length(which(land_out == FALSE)) > 0){
+            ii <- sample(which(land_out == FALSE), 1)
+            xi <- xi[ii]; yi <- yi[ii]
+          } else {
+            ii <- sample(1:length(land_out), 1)
+            xi <- xi[ii]; yi <- yi[ii]
+          }
+          
+          traj_x_ <- append(traj_x_, c(xi,traj_x[i+1]))
+          traj_y_ <- append(traj_y_, c(yi,traj_y[i+1]))
+        }
+        traj_x <- traj_x_
+        traj_y <- traj_y_
       }
       
-      if(length(which(land_out == FALSE)) > 0){
-        ii <- sample(which(land_out == FALSE), 1)
-        xi <- xi[ii]; yi <- yi[ii]
-      } else {
-        ii <- sample(1:length(land_out), 1)
-        xi <- xi[ii]; yi <- yi[ii]
-      }
+      traj_k <- data.table(ring = rep(substring(id,1,11),length(traj_x)), burst=rep(id,length(traj_x)),
+                           migr_month=rep(month,length(traj_x)),
+                           N = formatC(rep(k, length(traj_x)), flag = '0', width = nchar(max(N))), x = traj_x, y = traj_y)
       
-      traj_x_ <- append(traj_x_, c(xi,traj_x[i+1]))
-      traj_y_ <- append(traj_y_, c(yi,traj_y[i+1]))
+      traj_k
     }
-    traj_x <- traj_x_
-    traj_y <- traj_y_
+    
+    stopCluster(cl) # close connection to cluster/cores
+    
+    rbindlist(traj) %>%
+      bind_rows(traj_0, .) %>%
+      sf::st_as_sf(. ,coords=c("x","y"), crs=CRS(proj.aeqd)) %>%
+      sf::st_transform(CRS(proj.latlon)) %>%  # reproject to longlat
+      dplyr::mutate(lon = st_coordinates(.)[,1], lat = st_coordinates(.)[,2]) %>%
+      tibble() %>%
+      dplyr::select(ring,burst,migr_month, N, lon, lat) %>%
+      dplyr::filter(!N %in% unique(.$N[.$lon < -70 | .$lon > 70 | .$lat > 85 | .$lat < 30])) %>%
+      dplyr::filter(!N %in% unique(.$N[.$lon < -50 & .$lat > 60]))-> #remove above land and outside the study area
+      traj
+    
+    traj <- traj[traj$N%in%append(sample(unique(traj$N[traj$N!="obs"]),10000),"obs"),]
+    
+    #last traj = great circle line
+    start_pt_latlon <- traj[traj$N == 'obs', c("lon", "lat")][1,]
+    end_pt_latlon   <- traj[traj$N == 'obs', c("lon", "lat")][nrow(traj[traj$N == 'obs',]),]
+    
+    gctraj <- gcIntermediate(start_pt_latlon, end_pt_latlon, n = 2^n, addStartEnd = TRUE, sp = TRUE)
+    
+    tibble(ring = rep(substring(id,1,11),2^n+2), burst=rep(id,2^n+2),migr_month = rep(month, 2^n+2), N = rep('gc', 2^n+2)) %>%
+      dplyr::mutate(lon = geom(gctraj)[,"x"], lat = geom(gctraj)[, "y"]) %>%
+      dplyr::bind_rows(traj, .) ->
+      traj
+    
+    split(traj, as.factor(traj$N)) %>%
+      purrr::map(~ mutate(., gspeed = c(geosphere::distGeo(.[1:(nrow(.)-1), c("lon","lat")], .[2:(nrow(.)), c("lon","lat")]), NA))) %>%
+      purrr::map(~ mutate(., gdir = c(geosphere::bearing(.[1:(nrow(.)-1), c("lon","lat")], .[2:(nrow(.)), c("lon","lat")]), NA))) %>%
+      dplyr::bind_rows() ->
+      traj
+    
+    
+    # Registering backend for parallel computing
+    n.cores <- detectCores() - detectCores() %/% 10
+    cl      <- makeCluster(n.cores, outfile = paste("outputs/log_makeCluster_", format(Sys.time(), "%Y%m%d_%H%M%S"),".txt", sep = "")) #, type = 'FORK')
+    registerDoParallel(cl)
+    # getDoParWorkers()
+    
+    wind_df <- foreach(i = 1:nrow(traj), .errorhandling = 'pass', .packages = c("data.table", "rgdal", "sf", "sp", "windR")) %dopar% {  
+      
+      uv_wind = getWind(traj$lon[i], traj$lat[i], w = wind_data, PROJ = proj.latlon)
+      cbind.data.frame(u = uv_wind[[1]], v = uv_wind[[2]])
+    }
+    
+    stopCluster(cl)
+    
+    wind_df <- rbindlist(wind_df)
+    
+    traj %>%
+      dplyr::mutate(u_wind = as.numeric(wind_df$u),
+                    v_wind = as.numeric(wind_df$v),
+                    wdir = atan2(u_wind, v_wind)*180/pi, #wind direction
+                    wspeed = sqrt(u_wind^2 + v_wind^2),   #wind speed
+                    ws = wspeed*cosd(wdir -gdir)) %>%     #wind support
+      dplyr::group_by(N) %>%
+      dplyr::mutate(mean_ws = mean(ws, na.rm = T)) %>%
+      dplyr::ungroup() ->
+      traj
+    
+    saveRDS(traj, file = paste0("outputs/observed_sim_gc_tracks/tracks_",id,"_n", n, ".rds"))
+    cat(id, " --- ", round(difftime(Sys.time(), start.time, units = "secs"),1), "sec\n")
+    
   }
   
-  traj_k <- data.table(ring=rep(id,length(traj_x)), N = formatC(rep(k, length(traj_x)), flag = '0', width = nchar(max(N))), x = traj_x, y = traj_y)
-  traj_k
-}
-
-stopCluster(cl) # close connection to cluster/cores
-
-rbindlist(traj) %>%
-  bind_rows(traj_0, .) %>%
-  sf::st_as_sf(. ,coords=c("x","y"), crs=CRS(proj.aeqd)) %>%
-  sf::st_transform(CRS(proj.latlon)) %>%  # reproject to longlat
-  dplyr::mutate(lon = st_coordinates(.)[,1], lat = st_coordinates(.)[,2]) %>%
-  tibble() %>%
-  dplyr::select(ring, N, lon, lat) %>%
-  dplyr::filter(!N %in% unique(.$N[.$lon < -70 | .$lon > 70 | .$lat > 85 | .$lat < 30])) %>%
-  dplyr::filter(!N %in% unique(.$N[.$lon < -50 & .$lat > 60]))-> #remove above land and outside the study area
-  traj
-
-traj <- traj[sample(nrow(traj),10000),]
-
-#last traj = great circle line
-start_pt_latlon <- traj[traj$N == 'obs', c("lon", "lat")][1,]
-end_pt_latlon   <- traj[traj$N == 'obs', c("lon", "lat")][nrow(traj[traj$N == 'obs',]),]
-
-gctraj <- gcIntermediate(start_pt_latlon, end_pt_latlon, n = 2^n, addStartEnd = TRUE, sp = TRUE)
-
-tibble(ring = rep(id, 2^n+2), N = rep('gc', 2^n+2)) %>%
-  dplyr::mutate(lon = geom(gctraj)[,"x"], lat = geom(gctraj)[, "y"]) %>%
-  dplyr::bind_rows(traj, .) ->
-  traj
-
-split(traj, as.factor(traj$N)) %>%
-  purrr::map(~ mutate(., gspeed = c(geosphere::distGeo(.[1:(nrow(.)-1), c("lon","lat")], .[2:(nrow(.)), c("lon","lat")]), NA))) %>%
-  purrr::map(~ mutate(., gdir = c(geosphere::bearing(.[1:(nrow(.)-1), c("lon","lat")], .[2:(nrow(.)), c("lon","lat")]), NA))) %>%
-  dplyr::bind_rows() ->
-  traj
-
-
-# Registering backend for parallel computing
-n.cores <- detectCores() - detectCores() %/% 10
-cl      <- makeCluster(n.cores, outfile = paste("outputs/log_makeCluster_", format(Sys.time(), "%Y%m%d_%H%M%S"),".txt", sep = "")) #, type = 'FORK')
-registerDoParallel(cl)
-# getDoParWorkers()
-
-wind_df <- foreach(i = 1:nrow(traj), .errorhandling = 'pass', .packages = c("data.table", "rgdal", "sf", "sp", "windR")) %dopar% {  
   
-  uv_wind = getWind(traj$lon[i], traj$lat[i], w = wind_data, PROJ = proj.latlon)
-  cbind.data.frame(u = uv_wind[[1]], v = uv_wind[[2]])
 }
 
-stopCluster(cl)
 
-wind_df <- rbindlist(wind_df)
-
-traj %>%
-  dplyr::mutate(u_wind = as.numeric(wind_df$u),
-                v_wind = as.numeric(wind_df$v),
-                wdir = atan2(u_wind, v_wind)*180/pi, #wind direction
-                wspeed = sqrt(u_wind^2 + v_wind^2),   #wind speed
-                ws = wspeed*cosd(wdir -gdir)) %>%     #wind support
-  dplyr::group_by(N) %>%
-  dplyr::mutate(mean_ws = mean(ws, na.rm = T)) %>%
-  dplyr::ungroup() ->
-  traj
-
-saveRDS(traj, file = paste0("outputs/observed_sim_gc_tracks/tracks_",id,"_autumn","_n", n, ".rds")) #for autumn tracks
-#saveRDS(traj, file = paste0("outputs/observed_sim_gc_tracks/tracks_",id,"_spring","_n", n, ".rds")) #for spring tracks
-
-cat(id, " --- ", round(difftime(Sys.time(), start.time, units = "secs"),1), "sec\n")
-
-}
 
 #### Display ---- 
 
