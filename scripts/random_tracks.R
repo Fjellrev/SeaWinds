@@ -18,7 +18,7 @@ sind <-function(x) sin(x*pi/180)
 bird_path <- "data/Kittiwake_data_treated"
 bird_filename <- "BLKI_Alkefjellet_May_tracks.rds"
 wind_path <- "data/ERA_Interim/Interannual_means" 
-wind_filename <-  "ERA_Interim_interannual_monthly_mean_sfc_10_2013_to_2018.rds"
+wind_filename <-  "ERA_Interim_interannual_monthly_mean_sfc_11_2013_to_2018.rds"
 map_path <- "data/baseline_data"
 map_filename <- "SEAwinds_Worldmap_res-c.rds"
 
@@ -144,9 +144,10 @@ rbindlist(traj) %>%
   dplyr::mutate(lon = st_coordinates(.)[,1], lat = st_coordinates(.)[,2]) %>%
   tibble() %>%
   dplyr::select(ring, N, lon, lat) %>%
-  dplyr::filter(!N %in% unique(.$N[.$lon < -70 | .$lon > 70 | .$lat > 85 | .$lat < 30])) -> #remove above land and outside the study area
+  dplyr::filter(!N %in% unique(.$N[.$lon < -70 | .$lon > 70 | .$lat > 85 | .$lat < 30])) %>%
+  dplyr::filter(!N %in% unique(.$N[.$lon < -50 & .$lat > 60]))-> #remove above land and outside the study area
   traj
-
+#need to add a line to sample 10000 traj
 
 #last traj = great circle line
 start_pt_latlon <- traj[traj$N == 'obs', c("lon", "lat")][1,]
