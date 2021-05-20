@@ -19,5 +19,19 @@ for(i in 1:length(myfiles)){
     
 }
 
-
-
+# 
+# 
+#  plot <- ggplot(data=traj) +
+#     geom_path(size = .75, aes(x = lon, y = lat,color="blue", group = N)) +
+#     geom_sf(data=world_map,fill = "black", color = "black") +
+#     coord_sf(xlim = c(-70, 40), ylim = c(40,85), expand = FALSE)
+#     
+#  plot +   geom_path(data = trj0, size = .75, aes(x = lon, y = lat,color="blue")) 
+#  
+#  traj_0 %>%
+#       sf::st_as_sf(. ,coords=c("x","y"), crs=st_crs(proj.aeqd)) %>%
+#       sf::st_transform(st_crs(proj.latlon)) %>%  # reproject to longlat
+#       dplyr::mutate(lon = st_coordinates(.)[,1], lat = st_coordinates(.)[,2]) %>%
+#       tibble() ->
+#   trj0
+#  

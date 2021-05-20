@@ -45,12 +45,13 @@ bird_data.proj[,y := unlist(map(bird_data.sp$geometry,2))]
 
 ### parameters of the simulation ----
 n <- 5 #number of iterations to produce a track --> track with 2^n segments
-N <- 15000 #number of tracks created
+N <- 16000 #number of tracks created
 
 ### Main script ----
 
 months <- sort(unique(bird_data.proj$migr_month))
-for (month in months[6:8]){
+
+for (month in months[7:8]){
   
   ### Read and transform wind data ----
   
@@ -156,15 +157,13 @@ for (month in months[6:8]){
       tibble() %>%
       dplyr::select(ring,burst,migr_month, N, lon, lat) %>%
       dplyr::filter(!N %in% unique(.$N[.$lon < -70 | .$lon > 70 | .$lat > 85 | .$lat < 30])) %>% #remove above land and outside the study area
-      dplyr::filter(!N %in% unique(.$N[.$lon < -50 & .$lat > 64]))-> #remove above land and outside the study area
+      dplyr::filter(!N %in% unique(.$N[.$lon < -60 & .$lat > 65]))-> #remove above land and outside the study area
     traj
     
     if(nrow(traj) == 0){saveRDS(traj, file = paste0("outputs/observed_sim_gc_tracks/tracks_",id,"_n", n, "_EMPTY.rds")); next}
+    if(length(unique(traj$N)) < 1e4){saveRDS(traj, file = paste0("outputs/observed_sim_gc_tracks/tracks_",id,"_n", n, "_INCREASE_N.rds")); next}
     
-  }
-  
-  
-    traj <- traj[traj$N %in% append(sample(unique(traj$N[traj$N!="obs"]), 10000), "obs"), ]
+    traj <- traj[traj$N %in% append(sample(unique(traj$N[traj$N != "obs"]), 10000), "obs"), ]
     
     #last traj = great circle line
     start_pt_latlon <- traj[traj$N == 'obs', c("lon", "lat")][1, ]
@@ -213,3 +212,4 @@ for (month in months[6:8]){
     cat(id, " --- ", round(difftime(Sys.time(), start.time, units = "secs"),1), "sec\n")
     
   }
+}
