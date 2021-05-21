@@ -4,7 +4,7 @@
 ##
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-sapply(c('sf','sp','spData','tidyverse', 'data.table','MASS','plyr', 'magrittr', 'gdistance','geosphere','raster', "doParallel", "foreach",
+sapply(c('sf','sp','spData','tidyverse', 'data.table','rgeos','MASS','plyr', 'magrittr', 'gdistance','geosphere','raster', "doParallel", "foreach",
          'ggplot2', 'rWind','windR','adehabitatHR'),
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 
@@ -15,7 +15,7 @@ cosd <-function(x) cos(x*pi/180) #cos of an angle in degrees
 sind <-function(x) sin(x*pi/180) 
 
 bird_path <- "data/Kittiwake_data_treated"
-bird_filename <- "BLKI_Alkefjellet_May_tracks.rds"
+bird_filename <- "BLKI_tracks.rds"
 data_path <- "outputs/random_tracks"
 map_path <- "data/baseline_data"
 map_filename <- "SEAwinds_Worldmap_res-c.rds"
@@ -25,8 +25,7 @@ bird_data <- readRDS(paste0(bird_path,'/', bird_filename)) %>% as.data.table
 medlon <- median(bird_data$x, na.rm = T)
 medlat <- median(bird_data$y, na.rm = T)
 
-ring<- unique(bird_data$ring) 
-
+burst <- list.files(path = data_path)
 
 ### Define projections ---- 
 proj.aeqd <- paste("+proj=aeqd +lat_0=",round(medlat), " +lon_0=",round(medlon)," +units=m ", sep="")
@@ -37,17 +36,24 @@ wrld <- st_transform(world_map,CRS(proj.aeqd))
 
 
 #traj analysis
-stat <- data.frame(track_type = c(), f_cor = c())
-for (id in ring)
+
+r <- raster(xmn=-70.25, xmx=70.25, ymn=29.75, ymx=85.25, res=0.75) #Empty raster of the studied area
+r.corr.spr <- r
+r.corr.spr[]<-0
+
+r.corr.aut <- r
+r.corr.aut[]<-0
+
+stat <- data.frame(track_type = c(),month = c(),colony= c(), f_cor = c(),ws=c())
+for (id in burst[165])
 {
   cat(id)
-  data_filename <- paste0("tracks_",id,".rds")
-  traj<-readRDS(paste0(data_path, "/", data_filename)) %>% as.data.table
+  traj<-readRDS(paste0(data_path, "/", id)) %>% as.data.table
+  
   traj$track_type <- "sim" 
   traj$track_type[traj$N=="gc"] <- "gc" 
   traj$track_type[traj$N=="obs"] <- "obs" 
-  traj[, lon2 := data.table::shift(lon, type = 'lead'), by = N]
-  traj[,lat2 := data.table::shift(lat, type = 'lead'), by = N]
+  #traj <- rbind(traj[traj$track_type!="gc"],traj[track_type=="gc"][seq(1,nrow(traj[track_type=="gc"]),3)])
   
   ws_opt<-sort((traj$mean_ws[traj$track_type!="obs"]))[95/100*nrow(traj[traj$track_type!="obs"])]
   
@@ -58,26 +64,67 @@ for (id in ring)
   ke_opt_traj <- kernelUD(opt_trajs)
   ver_opt_traj <- getverticeshr(ke_opt_traj, 50) %>% st_as_sf%>%st_transform(. , crs=CRS(proj.latlon))
   
-  f_obs <- length(which(is.land(traj[traj$track_type=="obs"]$lon,
-                                traj[traj$track_type=="obs"]$lat,proj.latlon,ver_opt_traj)))/nrow(traj[traj$track_type=="obs"])
-  f_gc <- length(which(is.land(traj[traj$track_type=="gc"]$lon,
-                               traj[traj$track_type=="gc"]$lat,proj.latlon,ver_opt_traj)))/nrow(traj[traj$track_type=="gc"])
+  #traj.sf<- st_as_sf(traj, coords=c("lon","lat"), crs=CRS(proj.latlon))
   
-  stat <- rbind(stat, data.frame(track_type = c("obs","gc"),f_cor = c(f_obs,f_gc)))
+  #f_obs <- mean(st_distance(traj.sf[traj.sf$track_type=="obs",],ver_opt_traj))
+  #f_gc <- mean(st_distance(traj.sf[traj.sf$track_type=="gc",],ver_opt_traj))
   
-  #kde <- kde2d(traj[track_type!="observed"&mean_ws>ws_opt]$lon,
-  #traj[track_type!="observed"&mean_ws>ws_opt]$lat)
-  #kde.df <- raster(kde)%>% as.data.frame(xy=T)
-  
-  #plot_ <- ggplot(data=traj[N=="obs"]) + 
-  #geom_raster(data=kde.df, aes(x=x,y=y, fill=layer))+
-  #geom_sf(data=ver_opt_traj,fill="green", alpha = 0, size = 2, color="green")+
-  #geom_segment(data = traj[N=="obs"], size = 1.25, aes(x = lon, y = lat,xend=lon2,yend=lat2),color='black') +
-  #geom_segment(data = traj[N=="gc"], size = 1.25, aes(x = lon, y = lat,xend=lon2,yend=lat2),color='red') +
-  #geom_sf(data=world,fill = "grey", color = "grey") + 
-  #coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)
-  #print(plot_)
-  
-}
+  f_obs <- (length(which(is.land(traj[traj$track_type=="obs"]$lon,
+                                traj[traj$track_type=="obs"]$lat,proj.latlon,ver_opt_traj))))/(nrow(traj[traj$track_type=="obs"]))
+  f_gc <- (length(which(is.land(traj[traj$track_type=="gc"]$lon,
+                               traj[traj$track_type=="gc"]$lat,proj.latlon,ver_opt_traj))))/(nrow(traj[traj$track_type=="gc"]))
 
-ggplot(stat)+geom_boxplot(aes(x=track_type, y = f_cor), notch = T)
+  
+  stat <- rbind(stat, data.frame(track_type = c("obs","gc"), month = rep(traj$migr_month[1], 2),
+                                 colony=rep(bird_data$colony[bird_data$ring==traj$ring[1]][1]),
+                                 f_cor = c(f_obs,f_gc),ws=c(ws_obs,ws_gc)))
+  
+  kde <- kde2d(traj[track_type!="observed"&mean_ws>ws_opt]$lon,
+  traj[track_type!="observed"&mean_ws>ws_opt]$lat)
+  kde.df <- raster(kde)%>% as.data.frame(xy=T)
+  
+  traj[, lon2 := data.table::shift(lon, type = 'lead'), by = N]
+  traj[,lat2 := data.table::shift(lat, type = 'lead'), by = N]
+  
+  plot_ <- ggplot(data=traj[N=="obs"]) + 
+  geom_raster(data=kde.df, aes(x=x,y=y, fill=layer))+
+  geom_sf(data=ver_opt_traj,fill="green", alpha = 0, size = 2, color="green")+
+  geom_segment(data = traj[N=="obs"], size = 1.25, aes(x = lon, y = lat,xend=lon2,yend=lat2),color='darkgrey') +
+  geom_segment(data = traj[N=="gc"], size = 1.25, aes(x = lon, y = lat,xend=lon2,yend=lat2),color='red') +
+  geom_sf(data=world,fill = "grey", color = "grey") + 
+  coord_sf(xlim = c(-70, 70), ylim = c(30,85), expand = FALSE)
+  print(plot_)
+  
+  r.corr.id <- rasterize(ver_opt_traj,r)
+  if (as.numeric(traj$migr_month[1])<=5)
+  {
+    r.corr.spr <- stack(r.corr.spr, r.corr.id)
+  }
+  else 
+  {
+    r.corr.aut <- stack(r.corr.aut,  r.corr.id)
+  }
+}
+stat$season<-'autumn'
+stat$season[as.numeric(stat$month)<5] <- "spring"
+ggplot(stat)+geom_boxplot(aes(x=season, y = as.numeric(f_cor), fill = track_type),notch=TRUE)
+#ggplot(stat)+geom_boxplot(aes(y = ws, x = track_type))
+
+
+r.corr.aut_ <- calc(r.corr.aut, fun=sum, na.rm= T)
+r.corr.spr_ <- calc(r.corr.spr, fun=sum, na.rm= T)
+
+corr.df.aut <- r.corr.aut_ %>% as.data.frame(xy = T)
+corr.df.spr <- r.corr.spr_ %>% as.data.frame(xy = T)
+
+plot_ <- ggplot() + 
+geom_raster(data=corr.df.aut, aes(x=x,y=y, fill=layer))+
+geom_sf(data=world,fill = "grey", color = "grey") + 
+coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)
+print(plot_)
+
+plot_ <- ggplot() + 
+  geom_raster(data=corr.df.spr, aes(x=x,y=y, fill=layer))+
+  geom_sf(data=world,fill = "grey", color = "grey") + 
+  coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)
+print(plot_)
