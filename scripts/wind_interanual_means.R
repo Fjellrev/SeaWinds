@@ -7,10 +7,10 @@
 sapply(c('raster','stringr', 'data.table', 'magrittr', 'sf', "rnaturalearthdata","rnaturalearth", 'rWind', 'ggplot2'),
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 
-path_wind <- "data/ERA-Interrim/monthly_raw_data"
-path_save <- "data/ERA-Interrim/Interanual_means/"
+path_wind <- "data/ERA_Interim/monthly_raw_data"
+path_save <- "data/ERA_Interim/Interannual_means/"
 
-windRDS <- list.files(path=path_wind, pattern= 'ERA_Interim_monthly_sfc_10_11_2013_to_2018')
+windRDS <- list.files(path=path_wind, pattern= 'ERA_Interim_monthly_sfc_09_12_2013_to_2018')
 windRDS <- windRDS[grep(".RDS", windRDS)]
 wind_data <- readRDS(paste0(path_wind,"/", windRDS)) %>% as.data.table
 
@@ -27,6 +27,6 @@ for (month in months)
   setnames(v_mean, c('x', 'y','v'))
   wind_mean <- merge(u_mean, v_mean, by = c("x","y"))
   wind_mean[, month := rep(month, nrow(wind_mean))]
-  saveRDS(wind_mean, paste0(path_save, 'ERA_Interim_interanual_monthly_mean_sfc_',month,'_2013_to_2018.RDS'), compress='xz')
+  saveRDS(wind_mean, paste0(path_save, 'ERA_Interim_interannual_monthly_mean_sfc_',month,'_2013_to_2018.RDS'), compress='xz')
 
 }

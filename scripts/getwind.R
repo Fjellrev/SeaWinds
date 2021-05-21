@@ -1,14 +1,14 @@
 
-dirWind <- "data/ERA-Interrim/monthly_raw_data/"
+dirWind <- "data/ERA_Interim"
 
 sapply(c('rgdal', 'raster', 'data.table', 'magrittr', 'sp', 'rgeos', 'raster', 'foreach', 'ncdf4', 'gdalUtilities'),
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE) ) )
 
-netcdf_ <- list.files(dirWind, pattern = "ERA_Interim_monthly_sfc_10_11_2013_to_2018")
+netcdf_ <- list.files(dirWind, pattern = "ERA_Interim_daily_sfc_09_2016_to_06_2017")
 netcdf_ <- netcdf_[grep(".nc", netcdf_)]
 
-u <- brick(paste0(dirWind, netcdf_), varname = "u10")
-v <- brick(paste0(dirWind, netcdf_), varname = "v10")
+u <- brick(paste0(dirWind,"/", netcdf_), varname = "u10")
+v <- brick(paste0(dirWind,"/", netcdf_), varname = "v10")
 
 dd <- data.table(rastNam = names(u))
 dd[, datetime_ := substring(rastNam, 2, 11) %>% as.POSIXct(., format = '%Y.%m.%d') ]
@@ -48,5 +48,5 @@ o <- foreach(i = 1:nlayers(u) ) %do% {
 
 w <- rbindlist(o)
 
-saveRDS(w, paste0(dirWind, 'ERA_Interim_monthly_sfc_10_11_2013_to_2018.RDS'), compress='xz')
+saveRDS(w, paste0(dirWind, '/ERA_Interim_daily_sfc_09_2016_to_06_2017.RDS'), compress='xz')
 
