@@ -9,6 +9,7 @@ sapply(c('sf','sp','spData','tidyverse', 'data.table','rgeos','MASS','plyr', 'ma
        function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE)))
 
 ### utility functions ----
+
 source("functions/FUNCTION_OverlapPoly.r")
 source('functions/FUNCTION_QuickMap.r')
 cosd <-function(x) cos(x*pi/180) #cos of an angle in degrees 
@@ -16,7 +17,9 @@ sind <-function(x) sin(x*pi/180)
 
 bird_path <- "data/Kittiwake_data_treated"
 bird_filename <- "BLKI_tracks.rds"
+
 data_path <- "outputs/random_tracks"
+
 map_path <- "data/baseline_data"
 map_filename <- "SEAwinds_Worldmap_res-c.rds"
 
@@ -25,106 +28,107 @@ bird_data <- readRDS(paste0(bird_path,'/', bird_filename)) %>% as.data.table
 medlon <- median(bird_data$x, na.rm = T)
 medlat <- median(bird_data$y, na.rm = T)
 
-burst <- list.files(path = data_path)
-
-### Define projections ---- 
-proj.aeqd <- paste("+proj=aeqd +lat_0=",round(medlat), " +lon_0=",round(medlon)," +units=m ", sep="")
-proj.latlon <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" #classic longlat projection to use the windR function
+### Define projections and get world map ---- 
+proj.aeqd <- paste("+proj=aeqd +lat_0=",round(medlat), " +lon_0=",round(medlon)," +units=km ", sep="")
+proj.latlon <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" 
 
 world_map <- st_as_sf(readRDS(paste0(map_path,"/",map_filename)), coords=c("lon","lat"), crs = 4326)
 wrld <- st_transform(world_map,CRS(proj.aeqd))
 
+###Main script ----
 
-#traj analysis
+#spring and autumn rasters of corridors 
 
 r <- raster(xmn=-70.25, xmx=70.25, ymn=29.75, ymx=85.25, res=0.75) #Empty raster of the studied area
-r.corr.spr <- r
-r.corr.spr[]<-0
+corr.r<- r
+corr.r[]<-0
+r.names <- c("")
 
-r.corr.aut <- r
-r.corr.aut[]<-0
+#get the data filenames 
+burst <- list.files(path = data_path, pattern='.rds')
 
-stat <- data.frame(track_type = c(),month = c(),colony= c(), f_cor = c(),ws=c())
-for (id in burst[165])
+#for each burst
+stat <- data.frame(ring=c(), month = c(), season = c(), colony= c(), track_type = c(),
+                   f_cor = c(), detour = c(), gain_corr = c())  %>%as.data.table()
+
+for (id in burst)
 {
   cat(id)
   traj<-readRDS(paste0(data_path, "/", id)) %>% as.data.table
+  ring <- append(unique(substring(traj$ring,1,10)),unique(substring(traj$ring,1,11)))
+  colony <- bird_data$colony[bird_data$ring%in%ring][1]
+  month <- traj$migr_month[1]
+  season <- "spring"
+  if(as.numeric(month)>6){season <- "autumn"}
   
   traj$track_type <- "sim" 
   traj$track_type[traj$N=="gc"] <- "gc" 
-  traj$track_type[traj$N=="obs"] <- "obs" 
-  #traj <- rbind(traj[traj$track_type!="gc"],traj[track_type=="gc"][seq(1,nrow(traj[track_type=="gc"]),3)])
+  traj$track_type[traj$N=="obs"] <- "obs" #get type of track
   
-  ws_opt<-sort((traj$mean_ws[traj$track_type!="obs"]))[95/100*nrow(traj[traj$track_type!="obs"])]
+  #get optimal tracks as SpatialPoints and corridor as SpatialPolygonsDF
+  ws_opt <- quantile(traj$mean_ws,.95)
+  opt_trajs <- SpatialPoints(traj[track_type!="observed"&mean_ws>ws_opt][,c("lon","lat")], CRS(proj.latlon))%>% 
+    spTransform(., CRS(proj.aeqd))
   
-  opt_trajs <- st_as_sf(x = traj[track_type!="observed"&mean_ws>ws_opt][,c("lon","lat")],
-                        coords = c("lon","lat"), crs = CRS(proj.latlon))
-  opt_trajs <- st_transform(opt_trajs, CRS(proj.aeqd))
-  opt_trajs <- as(opt_trajs, "Spatial")
-  ke_opt_traj <- kernelUD(opt_trajs)
-  ver_opt_traj <- getverticeshr(ke_opt_traj, 50) %>% st_as_sf%>%st_transform(. , crs=CRS(proj.latlon))
+  ke_opt_traj <- kernelUD(opt_trajs) #density kernel of opt trajs
+  corr.poly.sp <- getverticeshr(ke_opt_traj, 50) # polygon with density above 50%
+  corr.poly<- corr.poly.sp %>% st_as_sf%>%st_transform(. , crs=CRS(proj.latlon)) #into sf class latlon to plot
   
-  #traj.sf<- st_as_sf(traj, coords=c("lon","lat"), crs=CRS(proj.latlon))
+  #get length inside the corridor  
+  pt_obs <- SpatialPoints(traj[track_type=="obs"][,c("lon","lat")], CRS(proj.latlon))%>%
+    spTransform(., CRS(proj.aeqd))
+  l_obs <- pt_obs%>%as(., "SpatialLines")
   
-  #f_obs <- mean(st_distance(traj.sf[traj.sf$track_type=="obs",],ver_opt_traj))
-  #f_gc <- mean(st_distance(traj.sf[traj.sf$track_type=="gc",],ver_opt_traj))
+  pts_gc <- SpatialPoints(traj[track_type=="gc"][,c("lon","lat")], CRS(proj.latlon))%>% 
+    spTransform(., CRS(proj.aeqd))
+  l_gc <- pts_gc%>%as(., "SpatialLines")
   
-  f_obs <- (length(which(is.land(traj[traj$track_type=="obs"]$lon,
-                                traj[traj$track_type=="obs"]$lat,proj.latlon,ver_opt_traj))))/(nrow(traj[traj$track_type=="obs"]))
-  f_gc <- (length(which(is.land(traj[traj$track_type=="gc"]$lon,
-                               traj[traj$track_type=="gc"]$lat,proj.latlon,ver_opt_traj))))/(nrow(traj[traj$track_type=="gc"]))
-
+  f_obs <- gLength(raster::intersect(l_obs,corr.poly.sp))/gLength(l_obs)
+  f_gc <- gLength(raster::intersect(l_gc,corr.poly.sp))/gLength(l_gc)
+  detour <- max(gDistance(pts_gc, corr.poly.sp,byid=TRUE))
+  gain_corr <- ws_opt - traj$mean_ws[traj$track_type=="gc"]
   
-  stat <- rbind(stat, data.frame(track_type = c("obs","gc"), month = rep(traj$migr_month[1], 2),
-                                 colony=rep(bird_data$colony[bird_data$ring==traj$ring[1]][1]),
-                                 f_cor = c(f_obs,f_gc),ws=c(ws_obs,ws_gc)))
+  #save stats of this burst
+  stat <- rbind(stat, data.frame(ring = traj$ring[1], month = month, season = season, colony=colony,
+                                 track_type = c("obs","gc"), f_cor = c(f_obs,f_gc),
+                                 detour = detour, gain_corr = gain_corr))
   
-  kde <- kde2d(traj[track_type!="observed"&mean_ws>ws_opt]$lon,
-  traj[track_type!="observed"&mean_ws>ws_opt]$lat)
-  kde.df <- raster(kde)%>% as.data.frame(xy=T)
+  #Save location of corridors
+  corr.r.id <- rasterize(corr.poly,r)
+  corr.r <- stack(corr.r, corr.r.id)
+  r.names <- append(r.names,paste0(colony,"-",season))
   
-  traj[, lon2 := data.table::shift(lon, type = 'lead'), by = N]
-  traj[,lat2 := data.table::shift(lat, type = 'lead'), by = N]
+  ##UNCOMMENT HERE TO PLOT THE CORRIDOR 
+  #kde <- kde2d(traj[track_type!="observed"&mean_ws>ws_opt]$lon,
+  #traj[track_type!="observed"&mean_ws>ws_opt]$lat)
+  #kde.df <- raster(kde)%>% as.data.frame(xy=T)
   
-  plot_ <- ggplot(data=traj[N=="obs"]) + 
-  geom_raster(data=kde.df, aes(x=x,y=y, fill=layer))+
-  geom_sf(data=ver_opt_traj,fill="green", alpha = 0, size = 2, color="green")+
-  geom_segment(data = traj[N=="obs"], size = 1.25, aes(x = lon, y = lat,xend=lon2,yend=lat2),color='darkgrey') +
-  geom_segment(data = traj[N=="gc"], size = 1.25, aes(x = lon, y = lat,xend=lon2,yend=lat2),color='red') +
-  geom_sf(data=world,fill = "grey", color = "grey") + 
-  coord_sf(xlim = c(-70, 70), ylim = c(30,85), expand = FALSE)
-  print(plot_)
+  #traj[, lon2 := data.table::shift(lon, type = 'lead'), by = N]
+  #traj[,lat2 := data.table::shift(lat, type = 'lead'), by = N]
   
-  r.corr.id <- rasterize(ver_opt_traj,r)
-  if (as.numeric(traj$migr_month[1])<=5)
-  {
-    r.corr.spr <- stack(r.corr.spr, r.corr.id)
-  }
-  else 
-  {
-    r.corr.aut <- stack(r.corr.aut,  r.corr.id)
-  }
+  #plot_ <- ggplot(data=traj[N=="obs"]) + 
+  #geom_raster(data=kde.df, aes(x=x,y=y, fill=layer))+
+  #geom_sf(data=corr.poly,fill="green", alpha = 0, size = 2, color="green")+
+  #geom_segment(data = traj[N=="obs"], size = 1.25, aes(x = lon, y = lat,xend=lon2,yend=lat2),color='darkgrey') +
+  #geom_segment(data = traj[N=="gc"], size = 1.25, aes(x = lon, y = lat,xend=lon2,yend=lat2),color='red') +
+  #geom_sf(data=world,fill = "grey", color = "grey") + 
+  #coord_sf(xlim = c(-70, 70), ylim = c(30,85), expand = FALSE)
+  #print(plot_)
+  
 }
-stat$season<-'autumn'
-stat$season[as.numeric(stat$month)<5] <- "spring"
-ggplot(stat)+geom_boxplot(aes(x=season, y = as.numeric(f_cor), fill = track_type),notch=TRUE)
-#ggplot(stat)+geom_boxplot(aes(y = ws, x = track_type))
 
+reg_gain <- lm(stat$gain_corr~stat$detour)
+stat[, corr_gain_rel := residuals(reg_gain)]
 
-r.corr.aut_ <- calc(r.corr.aut, fun=sum, na.rm= T)
-r.corr.spr_ <- calc(r.corr.spr, fun=sum, na.rm= T)
+#plot stats
+ggplot(stat)+geom_boxplot(aes(x=season, y = f_cor, fill = track_type),notch=TRUE)
 
-corr.df.aut <- r.corr.aut_ %>% as.data.frame(xy = T)
-corr.df.spr <- r.corr.spr_ %>% as.data.frame(xy = T)
+###save wind corridors by burst and by season----
+names(corr.r) <- r.names
 
-plot_ <- ggplot() + 
-geom_raster(data=corr.df.aut, aes(x=x,y=y, fill=layer))+
-geom_sf(data=world,fill = "grey", color = "grey") + 
-coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)
-print(plot_)
+spr.corr <- calc(corr.r[[which(str_detect(r.names, "spring"))]], fun = sum, na.rm=T)
+aut.corr <- calc(corr.r[[which(str_detect(r.names, "autumn"))]], fun = sum, na.rm=T)
 
-plot_ <- ggplot() + 
-  geom_raster(data=corr.df.spr, aes(x=x,y=y, fill=layer))+
-  geom_sf(data=world,fill = "grey", color = "grey") + 
-  coord_sf(xlim = c(-60, 60), ylim = c(30,85), expand = FALSE)
-print(plot_)
+writeRaster(corr.r[[-1]],"outputs/Rasters/corr_by_burst",format="raster", overwrite=TRUE)
+writeRaster(spr.corr,"outputs/Rasters/summ_corr_spring",format="raster", overwrite=TRUE)
+writeRaster(aut.corr,"outputs/Rasters/summ_corr_autumn",format="raster", overwrite=TRUE)

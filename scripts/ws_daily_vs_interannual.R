@@ -25,6 +25,8 @@ daily_wind_path <- "data/ERA_Interim"
 daily_wind_filename <- "ERA_Interim_daily_sfc_09_2016_to_06_2017.rds"
 monthly_wind_path <-"data/ERA_Interim/Interannual_means" 
 
+raster_path <- "outputs/Rasters"
+
 ### Read BLKI data ----
 bird_data <- readRDS(paste0(bird_path,'/', bird_filename)) %>% as.data.table
 bird_data[, x2 := data.table::shift(x, type = 'lead'), by = ring]
@@ -48,7 +50,9 @@ bird_data[, u_wind := as.numeric(u_wind)]
 bird_data[, v_wind := as.numeric(v_wind)]
 
 bird_data[, wdir := atan2(u_wind, v_wind)*180/pi, by = 1:nrow(bird_data)] #wind direction
-bird_data[, ws := cosd(wdir - gdir)] #wind support
+bird_data[, wspeed := sqrt(u_wind^2+v_wind^2)]
+bird_data[, ws := wspeed*cosd(wdir - gdir)] #wind support
+
 ### GET MEAN MONTHLY WINDs ----
 bird_data[, u_monthly_wind := 0]
 bird_data[, v_monthly_wind := 0]
@@ -71,5 +75,27 @@ for (month in months){
   
 }
 bird_data[, monthly_wdir := atan2(u_monthly_wind, v_monthly_wind)*180/pi, by = 1:nrow(bird_data)] #wind direction
-bird_data[, monthly_ws := cosd(monthly_wdir - gdir)] #wind support
+bird_data[, monthly_wspeed := sqrt(u_monthly_wind^2+v_monthly_wind^2)]
+bird_data[, monthly_ws := monthly_wspeed*cosd(monthly_wdir - gdir)] #wind support
+
+bird_data$season <- "spring"
+bird_data$season[as.numeric(bird_data$migr_month)>6] <- "autumn"
+
+r.var <- raster(paste0(data_path,"/wdir_sd"))
+
+bird_data[, wind_var := extract(r.var, cellFromXY(r.var,c(x,y))), by= 1:nrow(bird_data)]
+bird_data[, wind_var_track := sum(bird_data$wind_var[bird_data$burst==burst], na.rm=T), by= 1:nrow(bird_data)]
+bird_data[, d_ws := sum(bird_data$ws[bird_data$burst==burst]-bird_data$monthly_ws[bird_data$burst==burst], na.rm=T), by= 1:nrow(bird_data)]
+
+lmm.dws_windvar <- lmer(ws-monthly_ws ~ wind_var + (1|colony/ring) + (1|migr_month), data = bird_data)
+
+stat_ws_d <- data.frame(ring=bird_data$ring,colony=bird_data$colony, season = bird_data$season,
+                      wind_dataset = "daily", ws = bird_data$ws)
+
+stat_ws_i <- data.frame(ring=bird_data$ring,colony=bird_data$colony, season = bird_data$season,
+                        wind_dataset = "interanual", ws = bird_data$monthly_ws)
+
+stat <- rbind(stat_ws_d,stat_ws_i)
+stat$season <- "spring"
+stat$season[as.numeric(stat$month)>6] <- "autumn"
 
